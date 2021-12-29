@@ -1,7 +1,7 @@
 import requests
 from requests.structures import CaseInsensitiveDict
 
-def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, data: dict = {}, proxy: dict = {}) -> requests.Response:
+def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, data: dict = {}, proxy: dict = {}) -> requests.Response:
     """
     Make a request to the EarnApp API to a given endpoint
     :param endpoint: the API endpoint to request
@@ -13,24 +13,24 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, data: dict = 
     
     if reqType == "GET": # if we need to do a GET request
         if proxy != {}: # if we need to use a proxy
-            resp = requests.get("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=proxy) # do the GET request with the cookies required to the correct endpoint using proxy
+            resp = requests.get("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=proxy, timeout=timeout) # do the GET request with the cookies required to the correct endpoint using proxy
         else:
-            resp = requests.get("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies) # do the GET request with the cookies required to the correct endpoint
+            resp = requests.get("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, timeout=timeout) # do the GET request with the cookies required to the correct endpoint
     elif reqType == "POST": # if we need to do a POST request
         if proxy != {}: # if we need to use a proxy
-            resp = requests.post("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data, proxies=proxy) # do the POST request with the cookies required to the correct endpoint with the data using proxy
+            resp = requests.post("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data, proxies=proxy, timeout=timeout) # do the POST request with the cookies required to the correct endpoint with the data using proxy
         else:
-            resp = requests.post("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data) # do the POST request with the cookies required to the correct endpoint with the data
+            resp = requests.post("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data, timeout=timeout) # do the POST request with the cookies required to the correct endpoint with the data
     elif reqType == "DELETE": # if we need to do a DELETE request
         if proxy != {}: # if we need to use a proxy
-            resp = requests.delete("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=proxy) # do the DELETE request with the cookies required to the correct endpoint using proxy
+            resp = requests.delete("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=proxy, timeout=timeout) # do the DELETE request with the cookies required to the correct endpoint using proxy
         else:
-            resp = requests.delete("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies) # do the DELETE request with the cookies required to the correct endpoint
+            resp = requests.delete("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, timeout=timeout) # do the DELETE request with the cookies required to the correct endpoint
     elif reqType == "PUT": # if we need to do a PUT request
         if proxy != {}: # if we need to use a proxy
-            resp = requests.put("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data, proxies=proxy) # do the PUT request with the cookies required to the correct endpoint with the data using proxy
+            resp = requests.put("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data, proxies=proxy, timeout=timeout) # do the PUT request with the cookies required to the correct endpoint with the data using proxy
         else:
-            resp = requests.put("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data) # do the PUT request with the cookies required to the correct endpoint with the data
+            resp = requests.put("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data, timeout=timeout) # do the PUT request with the cookies required to the correct endpoint with the data
     else:
         return None
     return resp
@@ -38,6 +38,7 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, data: dict = 
 class User:
     cookies = {}
     proxy = {}
+    timeout = 10 # default timeout for requests
 
     def setProxy(self, proxy: dict) -> bool:
         """
@@ -58,9 +59,9 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("user_data", "GET", {"auth-method": method, "oauth-refresh-token": token}, proxy=self.proxy) # test the login data with the user_data endpoint with the proxy
+            resp = makeEarnAppRequest("user_data", "GET", {"auth-method": method, "oauth-refresh-token": token}, self.timeout, proxy=self.proxy) # test the login data with the user_data endpoint with the proxy
         else:
-            resp = makeEarnAppRequest("user_data", "GET", {"auth-method": method, "oauth-refresh-token": token}) # test the login data with the user_data endpoint
+            resp = makeEarnAppRequest("user_data", "GET", {"auth-method": method, "oauth-refresh-token": token}, self.timeout) # test the login data with the user_data endpoint
         
         if resp.status_code == 200: # if the cookies were valid
             self.cookies = {"auth-method": method, "oauth-refresh-token": token} # save the cookies to the variable
@@ -75,9 +76,9 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("user_data", "GET", self.cookies, proxy=self.proxy) # get the user data with the proxy
+            resp = makeEarnAppRequest("user_data", "GET", self.cookies, self.timeout, proxy=self.proxy) # get the user data with the proxy
         else:
-            resp = makeEarnAppRequest("user_data", "GET", self.cookies) # get the user data
+            resp = makeEarnAppRequest("user_data", "GET", self.cookies, self.timeout) # get the user data
         
         try:
             jsonData = resp.json() # attempt to get the JSON data
@@ -92,9 +93,9 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("money", "GET", self.cookies, proxy=self.proxy) # get the money data with the proxy
+            resp = makeEarnAppRequest("money", "GET", self.cookies, self.timeout, proxy=self.proxy) # get the money data with the proxy
         else:
-            resp = makeEarnAppRequest("money", "GET", self.cookies) # get the devuce data
+            resp = makeEarnAppRequest("money", "GET", self.cookies, self.timeout) # get the devuce data
         
         try:
             jsonData = resp.json() # attempt to get the JSON data
@@ -109,9 +110,9 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("devices", "GET", self.cookies, proxy=self.proxy) # get the device data with the proxy
+            resp = makeEarnAppRequest("devices", "GET", self.cookies, self.timeout, proxy=self.proxy) # get the device data with the proxy
         else:
-            resp = makeEarnAppRequest("devices", "GET", self.cookies) # get the device data
+            resp = makeEarnAppRequest("devices", "GET", self.cookies, self.timeout) # get the device data
         
         try:
             jsonData = resp.json() # attempt to get the JSON data
@@ -126,9 +127,9 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("app_versions", "GET", self.cookies, proxy=self.proxy) # get the app version with the proxy
+            resp = makeEarnAppRequest("app_versions", "GET", self.cookies, self.timeout, proxy=self.proxy) # get the app version with the proxy
         else:
-            resp = makeEarnAppRequest("app_versions", "GET", self.cookies) # get the version
+            resp = makeEarnAppRequest("app_versions", "GET", self.cookies, self.timeout) # get the version
         
         try:
             jsonData = resp.json() # attempt to get the JSON data
@@ -143,9 +144,9 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("payment_methods", "GET", self.cookies, proxy=self.proxy) # get the payment methods with the proxy
+            resp = makeEarnAppRequest("payment_methods", "GET", self.cookies, self.timeout, proxy=self.proxy) # get the payment methods with the proxy
         else:
-            resp = makeEarnAppRequest("payment_methods", "GET", self.cookies) # get payment methods
+            resp = makeEarnAppRequest("payment_methods", "GET", self.cookies, self.timeout) # get payment methods
         
         try:
             jsonData = resp.json() # attempt to get the JSON data
@@ -160,9 +161,9 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("transactions", "GET", self.cookies, proxy=self.proxy) # get the transactions with the proxy
+            resp = makeEarnAppRequest("transactions", "GET", self.cookies, self.timeout, proxy=self.proxy) # get the transactions with the proxy
         else:
-            resp = makeEarnAppRequest("transactions", "GET", self.cookies) # get all transactions
+            resp = makeEarnAppRequest("transactions", "GET", self.cookies, self.timeout) # get all transactions
         
         try:
             jsonData = resp.json() # attempt to get the JSON data
@@ -178,9 +179,9 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("link_device", "POST", self.cookies, {"uuid": deviceID}, proxy=self.proxy) # send request with proxy
+            resp = makeEarnAppRequest("link_device", "POST", self.cookies, self.timeout, {"uuid": deviceID}, proxy=self.proxy) # send request with proxy
         else:
-            resp = makeEarnAppRequest("link_device", "POST", self.cookies, {"uuid": deviceID}) # send request
+            resp = makeEarnAppRequest("link_device", "POST", self.cookies, self.timeout, {"uuid": deviceID}) # send request
         
         try:
             jsonData = resp.json() # attempt to get the JSON data
@@ -196,9 +197,9 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("device/" + deviceID, "DELETE", self.cookies, proxy=self.proxy) # send request with proxy
+            resp = makeEarnAppRequest("device/" + deviceID, "DELETE", self.cookies, self.timeout, proxy=self.proxy) # send request with proxy
         else:
-            resp = makeEarnAppRequest("device/" + deviceID, "DELETE", self.cookies) # send request
+            resp = makeEarnAppRequest("device/" + deviceID, "DELETE", self.cookies, self.timeout) # send request
 
         try:
             jsonData = resp.json() # attempt to get the JSON data
@@ -215,9 +216,9 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("device/" + deviceID, "PUT", self.cookies, {"name": name}, proxy=self.proxy) # send request with proxy
+            resp = makeEarnAppRequest("device/" + deviceID, "PUT", self.cookies, self.timeout, {"name": name}, proxy=self.proxy) # send request with proxy
         else:
-            resp = makeEarnAppRequest("device/" + deviceID, "PUT", self.cookies, {"name": name}) # send request
+            resp = makeEarnAppRequest("device/" + deviceID, "PUT", self.cookies, self.timeout, {"name": name}) # send request
 
         try:
             jsonData = resp.json() # attempt to get the JSON data
@@ -234,9 +235,9 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("redeem_details", "POST", self.cookies, {"to_email": toEmail, "payment_method": paymentMethod}, proxy=self.proxy) # send request with proxy
+            resp = makeEarnAppRequest("redeem_details", "POST", self.cookies, self.timeout, {"to_email": toEmail, "payment_method": paymentMethod}, proxy=self.proxy) # send request with proxy
         else:
-            resp = makeEarnAppRequest("redeem_details", "POST", self.cookies, {"to": toEmail, "payment_method": paymentMethod}) # send request
+            resp = makeEarnAppRequest("redeem_details", "POST", self.cookies, self.timeout, {"to": toEmail, "payment_method": paymentMethod}) # send request
         
         try:
             jsonData = resp.json() # attempt to get the JSON data
