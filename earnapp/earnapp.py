@@ -1,4 +1,4 @@
-import requests
+import requests, datetime
 from requests.structures import CaseInsensitiveDict
 
 def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, data: dict = {}, proxy: dict = {}) -> requests.Response:
@@ -189,17 +189,35 @@ class User:
             return None # if it failed return NoneType
         return jsonData
 
-    def unlinkDevice(self, deviceID: str) -> dict:
+    def hideDevice(self, deviceID: str) -> dict:
         """
-        Unlink a device from the logged in EarnApp account
-        :param deviceID: EarnApp device ID to unlink from account
+        Hide a device from the logged in EarnApp account
+        :param deviceID: EarnApp device ID to hide from account
         :return: a dictionary containing error message/success
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("device/" + deviceID, "DELETE", self.cookies, self.timeout, proxy=self.proxy) # send request with proxy
+            resp = makeEarnAppRequest("device/" + deviceID, "PUT", self.cookies, self.timeout, {"hide_ts": datetime.datetime.now().isoformat()}, proxy=self.proxy) # send request with proxy
         else:
-            resp = makeEarnAppRequest("device/" + deviceID, "DELETE", self.cookies, self.timeout) # send request
+            resp = makeEarnAppRequest("device/" + deviceID, "PUT", self.cookies, self.timeout, {"hide_ts": datetime.datetime.now().isoformat()}) # send request
+
+        try:
+            jsonData = resp.json() # attempt to get the JSON data
+        except:
+            return None # if it failed return NoneType
+        return jsonData
+
+    def showDevice(self, deviceID: str) -> dict:
+        """
+        Show a device on the logged in EarnApp account
+        :param deviceID: EarnApp device ID to show on account
+        :return: a dictionary containing error message/success
+        """
+        
+        if self.proxy != {}: # if we have a proxy
+            resp = makeEarnAppRequest("device/" + deviceID, "PUT", self.cookies, self.timeout, {"hide_ts": None}, proxy=self.proxy)
+        else:
+            resp = makeEarnAppRequest("device/" + deviceID, "PUT", self.cookies, self.timeout, {"hide_ts": None})
 
         try:
             jsonData = resp.json() # attempt to get the JSON data
