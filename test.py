@@ -15,12 +15,13 @@ print("Got user class")
 user.setProxy(proxy) 
 
 print("Attempting to log in with token " + token)
-loggedIn = user.login(token)
+try:
+    loggedIn = user.login(token)
+except earnapp.IncorrectTokenException:
+    print("Incorrect token")
+    raise earnapp.IncorrectTokenException
 
-if loggedIn == True:
-    print("Successfully logged in!")
-else:
-    print("Failed to log in")
+print("Successfully logged in!")
     
 print("User data: " + str(user.userData()))
 print("Money: " + str(user.money()))
