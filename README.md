@@ -1,4 +1,5 @@
 # EarnApp.py
+PyPI Link: https://pypi.org/project/EarnApp/
 ## Table of contents
 * [General info](#general-info)
 * [Documentation](#documentation)
