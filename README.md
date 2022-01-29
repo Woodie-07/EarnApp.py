@@ -72,3 +72,6 @@ except earnapp.IncorrectTokenException:
 
 print("Current balance: " + str(user.money()["balance"]))
 ```
+
+## Donations
+BTC Address: bc1qrgpcdt6ecz8fyj6c6p2x3mtlaw7yaca9jh4lqf
