@@ -270,13 +270,7 @@ class User:
         xsrfCookies = self.cookies.copy()
         xsrfCookies["xsrf-token"] = xsrfToken
 
-        print("Sending request with headers: " + str(headers) + " and cookies: " + str(xsrfCookies))
-        
         resp = requests.post("https://earnapp.com/dashboard/api/link_device?appid=earnapp_dashboard", headers=headers, cookies=xsrfCookies, data='{"uuid":"' + deviceID + '"}', proxies=None if self.proxy == {} else self.proxy, timeout=self.timeout) # do the POST request with the cookies required to the correct endpoint with the data using proxy
-
-        print(resp.request.url)
-        print(resp.request.body)
-        print(resp.request.headers)
 
         if resp.status_code == 429: # if the user is ratelimited
             raise RatelimitedException("You are being ratelimited") # raise an exception
