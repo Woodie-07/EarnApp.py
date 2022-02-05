@@ -13,6 +13,7 @@ You should have received a copy of the GNU General Public License along with Ear
 
 import requests, datetime
 from requests.structures import CaseInsensitiveDict
+from http.cookies import SimpleCookie
 
 def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, data: dict = {}, proxy: dict = {}) -> requests.Response:
     """
@@ -25,28 +26,55 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
     """
     
     if reqType == "GET": # if we need to do a GET request
-        if proxy != {}: # if we need to use a proxy
-            resp = requests.get("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=proxy, timeout=timeout) # do the GET request with the cookies required to the correct endpoint using proxy
-        else:
-            resp = requests.get("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, timeout=timeout) # do the GET request with the cookies required to the correct endpoint
+        resp = requests.get("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=None if proxy == {} else proxy, timeout=timeout) # do the GET request with the cookies required to the correct endpoint using proxy
     elif reqType == "POST": # if we need to do a POST request
-        if proxy != {}: # if we need to use a proxy
-            resp = requests.post("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data, proxies=proxy, timeout=timeout) # do the POST request with the cookies required to the correct endpoint with the data using proxy
-        else:
-            resp = requests.post("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data, timeout=timeout) # do the POST request with the cookies required to the correct endpoint with the data
+        resp = requests.post("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data, proxies=None if proxy == {} else proxy, timeout=timeout) # do the POST request with the cookies required to the correct endpoint with the data using proxy
     elif reqType == "DELETE": # if we need to do a DELETE request
-        if proxy != {}: # if we need to use a proxy
-            resp = requests.delete("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=proxy, timeout=timeout) # do the DELETE request with the cookies required to the correct endpoint using proxy
-        else:
-            resp = requests.delete("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, timeout=timeout) # do the DELETE request with the cookies required to the correct endpoint
+        resp = requests.delete("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=None if proxy == {} else proxy, timeout=timeout) # do the DELETE request with the cookies required to the correct endpoint using proxy
     elif reqType == "PUT": # if we need to do a PUT request
-        if proxy != {}: # if we need to use a proxy
-            resp = requests.put("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data, proxies=proxy, timeout=timeout) # do the PUT request with the cookies required to the correct endpoint with the data using proxy
-        else:
-            resp = requests.put("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data, timeout=timeout) # do the PUT request with the cookies required to the correct endpoint with the data
+       resp = requests.put("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data, proxies=None if proxy == {} else proxy, timeout=timeout) # do the PUT request with the cookies required to the correct endpoint with the data using proxy
     else:
         return None
     return resp
+
+def getXSRFToken(cookies: dict, timeout: int, proxy: dict = {}):
+    headers = CaseInsensitiveDict()
+    headers["Host"] = "earnapp.com"
+    headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+    headers["Accept-Language"] = "en-GB,en;q=0.5"
+    headers["Accept-Encoding"] = "gzip, deflate, br"
+    headers["Connection"] = "keep-alive"
+    headers["Upgrade-Insecure-Requests"] = "1"
+    headers["Sec-Fetch-Dest"] = "document"
+    headers["Sec-Fetch-Mode"] = "navigate"
+    headers["Sec-Fetch-Site"] = "none"
+    headers["Sec-Fetch-User"] = "?1"
+    headers["Pragma"] = "no-cache"
+    headers["Cache-Control"] = "no-cache"
+    headers["TE"] = "trailers"
+
+    if proxy != {}: # if we need to use a proxy
+        resp = requests.get("https://earnapp.com/dashboard", headers=headers, proxies=proxy, cookies=cookies, timeout=timeout)
+    else:
+        resp = requests.get("https://earnapp.com/dashboard", headers=headers, cookies=cookies, timeout=timeout) # do the GET request with the cookies required to the correct endpoint using proxy
+
+    if resp.status_code == 429: # if the user is ratelimited
+        raise RatelimitedException("You are being ratelimited") # raise an exception
+
+    cookie = SimpleCookie()
+    cookie.load(resp.headers['Set-Cookie'])
+
+    token = None
+
+    for key, morsel in cookie.items():
+
+        if key == "xsrf-token":
+            token = morsel.value
+
+    if token == None:
+        raise XSRFErrorException("Could not get XSRF token")
+
+    return token
 
 class RatelimitedException(Exception):
     pass
@@ -55,6 +83,9 @@ class IncorrectTokenException(Exception):
     pass
 
 class JSONDecodeErrorException(Exception):
+    pass
+
+class XSRFErrorException(Exception):
     pass
 
 class User:
@@ -229,12 +260,24 @@ class User:
         :param deviceID: EarnApp device ID to link to account
         :return: a dictionary containing error message/success
         """
+
+        xsrfToken = getXSRFToken(self.cookies, self.timeout, self.proxy) # get the XSRF token
+
+        headers = CaseInsensitiveDict()
+        headers["xsrf-token"] = xsrfToken
+        headers["Content-Type"] = "application/json"
+
+        xsrfCookies = self.cookies.copy()
+        xsrfCookies["xsrf-token"] = xsrfToken
+
+        print("Sending request with headers: " + str(headers) + " and cookies: " + str(xsrfCookies))
         
-        if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("link_device", "POST", self.cookies, self.timeout, {"uuid": deviceID}, proxy=self.proxy) # send request with proxy
-        else:
-            resp = makeEarnAppRequest("link_device", "POST", self.cookies, self.timeout, {"uuid": deviceID}) # send request
-        
+        resp = requests.post("https://earnapp.com/dashboard/api/link_device?appid=earnapp_dashboard", headers=headers, cookies=xsrfCookies, data='{"uuid":"' + deviceID + '"}', proxies=None if self.proxy == {} else self.proxy, timeout=self.timeout) # do the POST request with the cookies required to the correct endpoint with the data using proxy
+
+        print(resp.request.url)
+        print(resp.request.body)
+        print(resp.request.headers)
+
         if resp.status_code == 429: # if the user is ratelimited
             raise RatelimitedException("You are being ratelimited") # raise an exception
         elif resp.status_code == 403: # if the user is unauthorized

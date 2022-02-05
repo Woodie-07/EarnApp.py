@@ -44,6 +44,7 @@ Exceptions:
 - IncorrectTokenException - Raised when the token is incorrect
 - RatelimitedException - Raised when the IP is ratelimited
 - JSONDecodeErrorException - Raised when the JSON data returned by the EarnApp API is invalid
+- XRSFErrorException - Raised when the script fails to retrieve an XRSF token
 
 You can set a timeout for the requests with user.timeout, for example, to set the timeout to 10 seconds:
 ```
