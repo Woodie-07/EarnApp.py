@@ -37,7 +37,7 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
         return None
     return resp
 
-def getXSRFToken(cookies: dict, timeout: int, proxy: dict = {}):
+def getXSRFToken(timeout: int, proxy: dict = {}):
     headers = CaseInsensitiveDict()
     headers["Host"] = "earnapp.com"
     headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
@@ -53,10 +53,7 @@ def getXSRFToken(cookies: dict, timeout: int, proxy: dict = {}):
     headers["Cache-Control"] = "no-cache"
     headers["TE"] = "trailers"
 
-    if proxy != {}: # if we need to use a proxy
-        resp = requests.get("https://earnapp.com/dashboard", headers=headers, proxies=proxy, cookies=cookies, timeout=timeout)
-    else:
-        resp = requests.get("https://earnapp.com/dashboard", headers=headers, cookies=cookies, timeout=timeout) # do the GET request with the cookies required to the correct endpoint using proxy
+    resp = requests.get("https://earnapp.com/dashboard/api/sec/rotate_xsrf?appid=earnapp_dashboard&version=1.281.185", headers=headers, proxies=None if proxy == {} else proxy, timeout=timeout)
 
     if resp.status_code == 429: # if the user is ratelimited
         raise RatelimitedException("You are being ratelimited") # raise an exception
@@ -261,7 +258,7 @@ class User:
         :return: a dictionary containing error message/success
         """
 
-        xsrfToken = getXSRFToken(self.cookies, self.timeout, self.proxy) # get the XSRF token
+        xsrfToken = getXSRFToken(self.timeout, self.proxy) # get the XSRF token
 
         headers = CaseInsensitiveDict()
         headers["xsrf-token"] = xsrfToken
