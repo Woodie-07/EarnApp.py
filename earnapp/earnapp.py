@@ -117,7 +117,10 @@ class User:
             self.cookies = {"auth-method": method, "oauth-refresh-token": token} # save the cookies to the variable
             # return the right value depending on succeeding/failing
             return True
-        raise IncorrectTokenException(token + " is not correct") # if the token was invalid, raise an exception
+        elif resp.status_code == 403:
+            raise IncorrectTokenException(token + " is not correct") # if the token was invalid, raise an exception
+        else:
+            raise RatelimitedException("Some kind of an error when logging in, probably ratelimited.")
         
     def userData(self) -> dict:
         """
