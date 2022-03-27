@@ -25,14 +25,15 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
     :return: response object
     """
     
+    
     if reqType == "GET": # if we need to do a GET request
         resp = requests.get("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=None if proxy == {} else proxy, timeout=timeout) # do the GET request with the cookies required to the correct endpoint using proxy
     elif reqType == "POST": # if we need to do a POST request
-        resp = requests.post("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data, proxies=None if proxy == {} else proxy, timeout=timeout) # do the POST request with the cookies required to the correct endpoint with the data using proxy
+        resp = requests.post("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, json=data, proxies=None if proxy == {} else proxy, timeout=timeout) # do the POST request with the cookies required to the correct endpoint with the data using proxy
     elif reqType == "DELETE": # if we need to do a DELETE request
         resp = requests.delete("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=None if proxy == {} else proxy, timeout=timeout) # do the DELETE request with the cookies required to the correct endpoint using proxy
     elif reqType == "PUT": # if we need to do a PUT request
-       resp = requests.put("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, data=data, proxies=None if proxy == {} else proxy, timeout=timeout) # do the PUT request with the cookies required to the correct endpoint with the data using proxy
+       resp = requests.put("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, json=data, proxies=None if proxy == {} else proxy, timeout=timeout) # do the PUT request with the cookies required to the correct endpoint with the data using proxy
     else:
         return None
     return resp
@@ -85,6 +86,18 @@ class JSONDecodeErrorException(Exception):
 class XSRFErrorException(Exception):
     pass
 
+def getReturnData(resp: requests.Response, token: str):
+    if resp.status_code == 429: # if the user is ratelimited
+        raise RatelimitedException("You are being ratelimited") # raise an exception
+    elif resp.status_code == 403: # if the user is unauthorized
+        raise IncorrectTokenException(token + " is not correct") # raise an exception
+
+    try:
+        jsonData = resp.json() # attempt to get the JSON data
+    except:
+        raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
+    return jsonData
+
 class User:
     cookies = {}
     proxy = {}
@@ -133,16 +146,7 @@ class User:
         else:
             resp = makeEarnAppRequest("user_data", "GET", self.cookies, self.timeout) # get the user data
         
-        if resp.status_code == 429: # if the user is ratelimited
-            raise RatelimitedException("You are being ratelimited") # raise an exception
-        elif resp.status_code == 403: # if the user is unauthorized
-            raise IncorrectTokenException(self.cookies["oauth-refresh-token"] + " is not correct") # raise an exception
-
-        try:
-            jsonData = resp.json() # attempt to get the JSON data
-        except:
-            raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
-        return jsonData
+        return getReturnData(resp, self.cookies["oauth-refresh-token"])
         
     def money(self) -> dict:
         """
@@ -155,16 +159,7 @@ class User:
         else:
             resp = makeEarnAppRequest("money", "GET", self.cookies, self.timeout) # get the device data
         
-        if resp.status_code == 429: # if the user is ratelimited
-            raise RatelimitedException("You are being ratelimited") # raise an exception
-        elif resp.status_code == 403: # if the user is unauthorized
-            raise IncorrectTokenException(self.cookies["oauth-refresh-token"] + " is not correct") # raise an exception
-
-        try:
-            jsonData = resp.json() # attempt to get the JSON data
-        except:
-            raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
-        return jsonData
+        return getReturnData(resp, self.cookies["oauth-refresh-token"])
         
     def devices(self) -> dict:
         """
@@ -177,16 +172,7 @@ class User:
         else:
             resp = makeEarnAppRequest("devices", "GET", self.cookies, self.timeout) # get the device data
         
-        if resp.status_code == 429: # if the user is ratelimited
-            raise RatelimitedException("You are being ratelimited") # raise an exception
-        elif resp.status_code == 403: # if the user is unauthorized
-            raise IncorrectTokenException(self.cookies["oauth-refresh-token"] + " is not correct") # raise an exception
-
-        try:
-            jsonData = resp.json() # attempt to get the JSON data
-        except:
-            raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
-        return jsonData
+        return getReturnData(resp, self.cookies["oauth-refresh-token"])
         
     def appVersions(self) -> dict:
         """
@@ -199,16 +185,7 @@ class User:
         else:
             resp = makeEarnAppRequest("app_versions", "GET", self.cookies, self.timeout) # get the version
         
-        if resp.status_code == 429: # if the user is ratelimited
-            raise RatelimitedException("You are being ratelimited") # raise an exception
-        elif resp.status_code == 403: # if the user is unauthorized
-            raise IncorrectTokenException(self.cookies["oauth-refresh-token"] + " is not correct") # raise an exception
-
-        try:
-            jsonData = resp.json() # attempt to get the JSON data
-        except:
-            raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
-        return jsonData
+        return getReturnData(resp, self.cookies["oauth-refresh-token"])
         
     def paymentMethods(self) -> dict:
         """
@@ -221,16 +198,7 @@ class User:
         else:
             resp = makeEarnAppRequest("payment_methods", "GET", self.cookies, self.timeout) # get payment methods
         
-        if resp.status_code == 429: # if the user is ratelimited
-            raise RatelimitedException("You are being ratelimited") # raise an exception
-        elif resp.status_code == 403: # if the user is unauthorized
-            raise IncorrectTokenException(self.cookies["oauth-refresh-token"] + " is not correct") # raise an exception
-
-        try:
-            jsonData = resp.json() # attempt to get the JSON data
-        except:
-            raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
-        return jsonData
+        return getReturnData(resp, self.cookies["oauth-refresh-token"])
         
     def transactions(self) -> dict:
         """
@@ -243,16 +211,7 @@ class User:
         else:
             resp = makeEarnAppRequest("transactions", "GET", self.cookies, self.timeout) # get all transactions
         
-        if resp.status_code == 429: # if the user is ratelimited
-            raise RatelimitedException("You are being ratelimited") # raise an exception
-        elif resp.status_code == 403: # if the user is unauthorized
-            raise IncorrectTokenException(self.cookies["oauth-refresh-token"] + " is not correct") # raise an exception
-
-        try:
-            jsonData = resp.json() # attempt to get the JSON data
-        except:
-            raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
-        return jsonData
+        return getReturnData(resp, self.cookies["oauth-refresh-token"])
         
     def linkDevice(self, deviceID: str) -> dict:
         """
@@ -272,16 +231,7 @@ class User:
 
         resp = requests.post("https://earnapp.com/dashboard/api/link_device?appid=earnapp_dashboard", headers=headers, cookies=xsrfCookies, data='{"uuid":"' + deviceID + '"}', proxies=None if self.proxy == {} else self.proxy, timeout=self.timeout) # do the POST request with the cookies required to the correct endpoint with the data using proxy
 
-        if resp.status_code == 429: # if the user is ratelimited
-            raise RatelimitedException("You are being ratelimited") # raise an exception
-        elif resp.status_code == 403: # if the user is unauthorized
-            raise IncorrectTokenException(self.cookies["oauth-refresh-token"] + " is not correct") # raise an exception
-
-        try:
-            jsonData = resp.json() # attempt to get the JSON data
-        except:
-            raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
-        return jsonData
+        return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
     def hideDevice(self, deviceID: str) -> dict:
         """
@@ -291,20 +241,11 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("device/" + deviceID, "PUT", self.cookies, self.timeout, {"hide_ts": datetime.datetime.now().isoformat()}, proxy=self.proxy) # send request with proxy
+            resp = makeEarnAppRequest("hide_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID}, proxy=self.proxy) # send request with proxy
         else:
-            resp = makeEarnAppRequest("device/" + deviceID, "PUT", self.cookies, self.timeout, {"hide_ts": datetime.datetime.now().isoformat()}) # send request
+            resp = makeEarnAppRequest("hide_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID}) # send request
         
-        if resp.status_code == 429: # if the user is ratelimited
-            raise RatelimitedException("You are being ratelimited") # raise an exception
-        elif resp.status_code == 403: # if the user is unauthorized
-            raise IncorrectTokenException(self.cookies["oauth-refresh-token"] + " is not correct") # raise an exception
-
-        try:
-            jsonData = resp.json() # attempt to get the JSON data
-        except:
-            raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
-        return jsonData
+        return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
     def showDevice(self, deviceID: str) -> dict:
         """
@@ -314,20 +255,25 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("device/" + deviceID, "PUT", self.cookies, self.timeout, {"hide_ts": None}, proxy=self.proxy)
+            resp = makeEarnAppRequest("show_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID}, proxy=self.proxy) # send request with proxy
         else:
-            resp = makeEarnAppRequest("device/" + deviceID, "PUT", self.cookies, self.timeout, {"hide_ts": None})
+            resp = makeEarnAppRequest("show_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID}) # send request
         
-        if resp.status_code == 429: # if the user is ratelimited
-            raise RatelimitedException("You are being ratelimited") # raise an exception
-        elif resp.status_code == 403: # if the user is unauthorized
-            raise IncorrectTokenException(self.cookies["oauth-refresh-token"] + " is not correct") # raise an exception
+        return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
-        try:
-            jsonData = resp.json() # attempt to get the JSON data
-        except:
-            raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
-        return jsonData
+    def deleteDevice(self, deviceID: str) -> dict:
+        """
+        Delete a device from the logged in EarnApp account
+        :param deviceID: EarnApp device ID to delete from account
+        :return: a dictionary containing error message/success
+        """
+        
+        if self.proxy != {}:
+            resp = makeEarnAppRequest("device/" + deviceID, "DELETE", self.cookies, self.timeout, proxy=self.proxy)
+        else:
+            resp = makeEarnAppRequest("device/" + deviceID, "DELETE", self.cookies, self.timeout)
+
+        return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
     def renameDevice(self, deviceID: str, name: str) -> dict:
         """
@@ -338,20 +284,11 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("device/" + deviceID, "PUT", self.cookies, self.timeout, {"name": name}, proxy=self.proxy) # send request with proxy
+            resp = makeEarnAppRequest("edit_device/" + deviceID, "PUT", self.cookies, self.timeout, {"name": name}, proxy=self.proxy) # send request with proxy
         else:
-            resp = makeEarnAppRequest("device/" + deviceID, "PUT", self.cookies, self.timeout, {"name": name}) # send request
+            resp = makeEarnAppRequest("edit_device/" + deviceID, "PUT", self.cookies, self.timeout, {"name": name}) # send request
         
-        if resp.status_code == 429: # if the user is ratelimited
-            raise RatelimitedException("You are being ratelimited") # raise an exception
-        elif resp.status_code == 403: # if the user is unauthorized
-            raise IncorrectTokenException(self.cookies["oauth-refresh-token"] + " is not correct") # raise an exception
-
-        try:
-            jsonData = resp.json() # attempt to get the JSON data
-        except:
-            raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
-        return jsonData
+        return getReturnData(resp, self.cookies["oauth-refresh-token"])
         
     def redeemDetails(self, toEmail: str, paymentMethod: str="paypal.com") -> dict:
         """
@@ -366,13 +303,18 @@ class User:
         else:
             resp = makeEarnAppRequest("redeem_details", "POST", self.cookies, self.timeout, {"to": toEmail, "payment_method": paymentMethod}) # send request
         
-        if resp.status_code == 429: # if the user is ratelimited
-            raise RatelimitedException("You are being ratelimited") # raise an exception
-        elif resp.status_code == 403: # if the user is unauthorized
-            raise IncorrectTokenException(self.cookies["oauth-refresh-token"] + " is not correct") # raise an exception
+        return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
-        try:
-            jsonData = resp.json() # attempt to get the JSON data
-        except:
-            raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
-        return jsonData
+    def onlineStatus(self, deviceIDs: list) -> dict:
+        """
+        Get the online status of a list of devices
+        :param deviceIDs: list of device ID dicts to check (uuid and appid in each dict)
+        :return: a dictionary containing the online status of the devices
+        """
+        
+        if self.proxy != {}: # if we have a proxy
+            resp = makeEarnAppRequest("device_statuses", "POST", self.cookies, self.timeout, {"list": deviceIDs}, proxy=self.proxy) # send request with proxy
+        else:
+            resp = makeEarnAppRequest("device_statuses", "POST", self.cookies, self.timeout, {"list": deviceIDs})
+
+        return getReturnData(resp, self.cookies["oauth-refresh-token"])
