@@ -25,7 +25,7 @@ print("Initializing user class")
 user = earnapp.User()
 print("Got user class")
 
-user.setProxy(proxy) 
+user.setProxy(proxy)
 
 print("Attempting to log in with token " + token)
 try:
