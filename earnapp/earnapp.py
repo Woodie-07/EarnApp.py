@@ -15,6 +15,7 @@ import requests
 from requests.structures import CaseInsensitiveDict
 from http.cookies import SimpleCookie
 
+
 def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, data: dict = None, proxy: dict = None) -> requests.Response:
     """
     Make a request to the EarnApp API to a given endpoint
@@ -44,6 +45,7 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
     else:
         return None
     return resp
+
 
 def getXSRFToken(timeout: int, proxy: dict = None):
     """
@@ -92,17 +94,6 @@ def getXSRFToken(timeout: int, proxy: dict = None):
 
     return token
 
-class RatelimitedException(Exception):
-    pass
-
-class IncorrectTokenException(Exception):
-    pass
-
-class JSONDecodeErrorException(Exception):
-    pass
-
-class XSRFErrorException(Exception):
-    pass
 
 def getReturnData(resp: requests.Response, token: str):
     """
@@ -122,6 +113,23 @@ def getReturnData(resp: requests.Response, token: str):
         raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
     return jsonData
 
+
+class RatelimitedException(Exception):
+    pass
+
+
+class IncorrectTokenException(Exception):
+    pass
+
+
+class JSONDecodeErrorException(Exception):
+    pass
+
+
+class XSRFErrorException(Exception):
+    pass
+
+
 class User:
     cookies = {}
     proxy = {}
@@ -136,6 +144,7 @@ class User:
 
         self.proxy = proxy # set the proxy
         return True
+
 
     def login(self, token: str, method: str="google") -> bool:
         """
@@ -159,6 +168,7 @@ class User:
 
         raise RatelimitedException("Some kind of an error when logging in, probably ratelimited.")
 
+
     def userData(self) -> dict:
         """
         Get data about the logged in user
@@ -171,6 +181,7 @@ class User:
             resp = makeEarnAppRequest("user_data", "GET", self.cookies, self.timeout) # get the user data
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
+
 
     def money(self) -> dict:
         """
@@ -185,6 +196,7 @@ class User:
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
+
     def devices(self) -> dict:
         """
         Get data about the logged in user's devices (device IDs, rate, amount earnt, etc)
@@ -197,6 +209,7 @@ class User:
             resp = makeEarnAppRequest("devices", "GET", self.cookies, self.timeout) # get the device data
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
+
 
     def appVersions(self) -> dict:
         """
@@ -211,6 +224,7 @@ class User:
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
+
     def paymentMethods(self) -> dict:
         """
         Get all available payment methods
@@ -224,6 +238,7 @@ class User:
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
+
     def transactions(self) -> dict:
         """
         Get past transactions and their status
@@ -236,6 +251,7 @@ class User:
             resp = makeEarnAppRequest("transactions", "GET", self.cookies, self.timeout) # get all transactions
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
+
 
     def linkDevice(self, deviceID: str) -> dict:
         """
@@ -257,6 +273,7 @@ class User:
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
+
     def hideDevice(self, deviceID: str) -> dict:
         """
         Hide a device from the logged in EarnApp account
@@ -270,6 +287,7 @@ class User:
             resp = makeEarnAppRequest("hide_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID}) # send request
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
+
 
     def showDevice(self, deviceID: str) -> dict:
         """
@@ -285,6 +303,7 @@ class User:
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
+
     def deleteDevice(self, deviceID: str) -> dict:
         """
         Delete a device from the logged in EarnApp account
@@ -298,6 +317,7 @@ class User:
             resp = makeEarnAppRequest("device/" + deviceID, "DELETE", self.cookies, self.timeout)
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
+
 
     def renameDevice(self, deviceID: str, name: str) -> dict:
         """
@@ -314,6 +334,7 @@ class User:
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
+
     def redeemDetails(self, toEmail: str, paymentMethod: str="paypal.com") -> dict:
         """
         Change the redeem details of the logged in account
@@ -328,6 +349,7 @@ class User:
             resp = makeEarnAppRequest("redeem_details", "POST", self.cookies, self.timeout, {"to": toEmail, "payment_method": paymentMethod}) # send request
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
+
 
     def onlineStatus(self, deviceIDs: list) -> dict:
         """
