@@ -181,9 +181,9 @@ class User:
         """
         
         if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("app_versions", "GET", self.cookies, self.timeout, proxy=self.proxy) # get the app version with the proxy
+            resp = makeEarnAppRequest("downloads", "GET", self.cookies, self.timeout, proxy=self.proxy) # get the app version with the proxy
         else:
-            resp = makeEarnAppRequest("app_versions", "GET", self.cookies, self.timeout) # get the version
+            resp = makeEarnAppRequest("downloads", "GET", self.cookies, self.timeout) # get the version
         
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
         
