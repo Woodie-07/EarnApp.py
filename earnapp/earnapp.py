@@ -112,7 +112,7 @@ def getReturnData(resp: requests.Response, token: str):
     A function to get the JSON data from the response object.
     This function may also raise an exception if an error is encountered.
     :param resp: the response object to get the data from
-    :param token: the EarnApp oauth-refresh-token used for the request. 
+    :param token: the EarnApp oauth-refresh-token used for the request.
     This token may be used when a IncorrectTokenException is raised.
     """
     if resp.status_code == 429:  # if the user is ratelimited
@@ -192,7 +192,7 @@ class User:
         resp = makeEarnAppRequest(
             "money",
             "GET",
-            self.cookies, 
+            self.cookies,
             self.timeout,
             proxy=self.proxy
         )
@@ -238,7 +238,7 @@ class User:
             "payment_methods",
             "GET",
             self.cookies,
-            self.timeout, 
+            self.timeout,
             proxy=self.proxy
         )
 
@@ -311,7 +311,7 @@ class User:
         resp = makeEarnAppRequest(
             "show_device",
             "PUT",
-            self.cookies, 
+            self.cookies,
             self.timeout,
             {
                 "uuid": deviceID
@@ -331,7 +331,7 @@ class User:
             "device/" + deviceID,
             "DELETE",
             self.cookies,
-            self.timeout, 
+            self.timeout,
             proxy=self.proxy
         )
 
@@ -348,7 +348,7 @@ class User:
             "edit_device/" + deviceID,
             "PUT",
             self.cookies,
-            self.timeout, 
+            self.timeout,
             {
                 "name": name
             },
