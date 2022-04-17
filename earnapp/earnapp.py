@@ -16,6 +16,22 @@ from requests.structures import CaseInsensitiveDict
 from http.cookies import SimpleCookie
 
 
+class RatelimitedException(Exception):
+    pass
+
+
+class IncorrectTokenException(Exception):
+    pass
+
+
+class JSONDecodeErrorException(Exception):
+    pass
+
+
+class XSRFErrorException(Exception):
+    pass
+
+
 def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, data: dict = None, proxy: dict = None) -> requests.Response:
     """
     Make a request to the EarnApp API to a given endpoint
@@ -34,14 +50,14 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
 
 
 
-    if reqType == "GET": # if we need to do a GET request
-        resp = requests.get("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=None if proxy == {} else proxy, timeout=timeout) # do the GET request with the cookies required to the correct endpoint using proxy
-    elif reqType == "POST": # if we need to do a POST request
-        resp = requests.post("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, json=data, proxies=None if proxy == {} else proxy, timeout=timeout) # do the POST request with the cookies required to the correct endpoint with the data using proxy
-    elif reqType == "DELETE": # if we need to do a DELETE request
-        resp = requests.delete("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=None if proxy == {} else proxy, timeout=timeout) # do the DELETE request with the cookies required to the correct endpoint using proxy
-    elif reqType == "PUT": # if we need to do a PUT request
-       resp = requests.put("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, json=data, proxies=None if proxy == {} else proxy, timeout=timeout) # do the PUT request with the cookies required to the correct endpoint with the data using proxy
+    if reqType == "GET":  # if we need to do a GET request
+        resp = requests.get("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=None if proxy == {} else proxy, timeout=timeout)  # do the GET request with the cookies required to the correct endpoint using proxy
+    elif reqType == "POST":  # if we need to do a POST request
+        resp = requests.post("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, json=data, proxies=None if proxy == {} else proxy, timeout=timeout)  # do the POST request with the cookies required to the correct endpoint with the data using proxy
+    elif reqType == "DELETE":  # if we need to do a DELETE request
+        resp = requests.delete("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=None if proxy == {} else proxy, timeout=timeout)  # do the DELETE request with the cookies required to the correct endpoint using proxy
+    elif reqType == "PUT":  # if we need to do a PUT request
+       resp = requests.put("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, json=data, proxies=None if proxy == {} else proxy, timeout=timeout)  # do the PUT request with the cookies required to the correct endpoint with the data using proxy
     else:
         return None
     return resp
@@ -76,8 +92,8 @@ def getXSRFToken(timeout: int, proxy: dict = None):
 
     resp = requests.get("https://earnapp.com/dashboard/api/sec/rotate_xsrf?appid=earnapp_dashboard&version=1.281.185", headers=headers, proxies=None if proxy == {} else proxy, timeout=timeout)
 
-    if resp.status_code == 429: # if the user is ratelimited
-        raise RatelimitedException("You are being ratelimited") # raise an exception
+    if resp.status_code == 429:  # if the user is ratelimited
+        raise RatelimitedException("You are being ratelimited")  # raise an exception
 
     cookie = SimpleCookie()
     cookie.load(resp.headers['Set-Cookie'])
@@ -102,38 +118,22 @@ def getReturnData(resp: requests.Response, token: str):
     :param resp: the response object to get the data from
     :param token: the EarnApp oauth-refresh-token used for the request. This token may be used when a IncorrectTokenException is raised.
     """
-    if resp.status_code == 429: # if the user is ratelimited
-        raise RatelimitedException("You are being ratelimited") # raise an exception
-    if resp.status_code == 403: # if the user is unauthorized
-        raise IncorrectTokenException(token + " is not correct") # raise an exception
+    if resp.status_code == 429:  # if the user is ratelimited
+        raise RatelimitedException("You are being ratelimited")  # raise an exception
+    if resp.status_code == 403:  # if the user is unauthorized
+        raise IncorrectTokenException(token + " is not correct")  # raise an exception
 
     try:
-        jsonData = resp.json() # attempt to get the JSON data
+        jsonData = resp.json()  # attempt to get the JSON data
     except requests.exceptions.JSONDecodeError:
-        raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
+        raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text)  # if the JSON data was invalid, raise an exception
     return jsonData
-
-
-class RatelimitedException(Exception):
-    pass
-
-
-class IncorrectTokenException(Exception):
-    pass
-
-
-class JSONDecodeErrorException(Exception):
-    pass
-
-
-class XSRFErrorException(Exception):
-    pass
 
 
 class User:
     cookies = {}
     proxy = {}
-    timeout = 10 # default timeout for requests
+    timeout = 10  # default timeout for requests
 
     def setProxy(self, proxy: dict) -> bool:
         """
@@ -142,7 +142,7 @@ class User:
         :return: True
         """
 
-        self.proxy = proxy # set the proxy
+        self.proxy = proxy  # set the proxy
         return True
 
 
@@ -154,17 +154,17 @@ class User:
         :return: True on successful login, False otherwise
         """
 
-        if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("user_data", "GET", {"auth-method": method, "oauth-refresh-token": token}, self.timeout, proxy=self.proxy) # test the login data with the user_data endpoint with the proxy
+        if self.proxy != {}:  # if we have a proxy
+            resp = makeEarnAppRequest("user_data", "GET", {"auth-method": method, "oauth-refresh-token": token}, self.timeout, proxy=self.proxy)  # test the login data with the user_data endpoint with the proxy
         else:
-            resp = makeEarnAppRequest("user_data", "GET", {"auth-method": method, "oauth-refresh-token": token}, self.timeout) # test the login data with the user_data endpoint
+            resp = makeEarnAppRequest("user_data", "GET", {"auth-method": method, "oauth-refresh-token": token}, self.timeout)  # test the login data with the user_data endpoint
 
-        if resp.status_code == 200: # if the cookies were valid
-            self.cookies = {"auth-method": method, "oauth-refresh-token": token} # save the cookies to the variable
+        if resp.status_code == 200:  # if the cookies were valid
+            self.cookies = {"auth-method": method, "oauth-refresh-token": token}  # save the cookies to the variable
             # return the right value depending on succeeding/failing
             return True
         if resp.status_code == 403:
-            raise IncorrectTokenException(token + " is not correct") # if the token was invalid, raise an exception
+            raise IncorrectTokenException(token + " is not correct")  # if the token was invalid, raise an exception
 
         raise RatelimitedException("Some kind of an error when logging in, probably ratelimited.")
 
@@ -175,10 +175,10 @@ class User:
         :return: a dictionary containing the user data
         """
 
-        if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("user_data", "GET", self.cookies, self.timeout, proxy=self.proxy) # get the user data with the proxy
+        if self.proxy != {}:  # if we have a proxy
+            resp = makeEarnAppRequest("user_data", "GET", self.cookies, self.timeout, proxy=self.proxy)  # get the user data with the proxy
         else:
-            resp = makeEarnAppRequest("user_data", "GET", self.cookies, self.timeout) # get the user data
+            resp = makeEarnAppRequest("user_data", "GET", self.cookies, self.timeout)  # get the user data
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
@@ -189,10 +189,10 @@ class User:
         :return: a dictionary containing the user's money data
         """
 
-        if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("money", "GET", self.cookies, self.timeout, proxy=self.proxy) # get the money data with the proxy
+        if self.proxy != {}:  # if we have a proxy
+            resp = makeEarnAppRequest("money", "GET", self.cookies, self.timeout, proxy=self.proxy)  # get the money data with the proxy
         else:
-            resp = makeEarnAppRequest("money", "GET", self.cookies, self.timeout) # get the device data
+            resp = makeEarnAppRequest("money", "GET", self.cookies, self.timeout)  # get the device data
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
@@ -203,10 +203,10 @@ class User:
         :return: a dictionary containing the user's device data
         """
 
-        if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("devices", "GET", self.cookies, self.timeout, proxy=self.proxy) # get the device data with the proxy
+        if self.proxy != {}:  # if we have a proxy
+            resp = makeEarnAppRequest("devices", "GET", self.cookies, self.timeout, proxy=self.proxy)  # get the device data with the proxy
         else:
-            resp = makeEarnAppRequest("devices", "GET", self.cookies, self.timeout) # get the device data
+            resp = makeEarnAppRequest("devices", "GET", self.cookies, self.timeout)  # get the device data
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
@@ -217,10 +217,10 @@ class User:
         :return: a dictionary containing the latest version
         """
 
-        if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("downloads", "GET", self.cookies, self.timeout, proxy=self.proxy) # get the app version with the proxy
+        if self.proxy != {}:  # if we have a proxy
+            resp = makeEarnAppRequest("downloads", "GET", self.cookies, self.timeout, proxy=self.proxy)  # get the app version with the proxy
         else:
-            resp = makeEarnAppRequest("downloads", "GET", self.cookies, self.timeout) # get the version
+            resp = makeEarnAppRequest("downloads", "GET", self.cookies, self.timeout)  # get the version
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
@@ -231,10 +231,10 @@ class User:
         :return: a dictionary containing all available payment methods
         """
 
-        if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("payment_methods", "GET", self.cookies, self.timeout, proxy=self.proxy) # get the payment methods with the proxy
+        if self.proxy != {}:  # if we have a proxy
+            resp = makeEarnAppRequest("payment_methods", "GET", self.cookies, self.timeout, proxy=self.proxy)  # get the payment methods with the proxy
         else:
-            resp = makeEarnAppRequest("payment_methods", "GET", self.cookies, self.timeout) # get payment methods
+            resp = makeEarnAppRequest("payment_methods", "GET", self.cookies, self.timeout)  # get payment methods
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
@@ -245,10 +245,10 @@ class User:
         :return: a dictionary containing past transactions
         """
 
-        if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("transactions", "GET", self.cookies, self.timeout, proxy=self.proxy) # get the transactions with the proxy
+        if self.proxy != {}:  # if we have a proxy
+            resp = makeEarnAppRequest("transactions", "GET", self.cookies, self.timeout, proxy=self.proxy)  # get the transactions with the proxy
         else:
-            resp = makeEarnAppRequest("transactions", "GET", self.cookies, self.timeout) # get all transactions
+            resp = makeEarnAppRequest("transactions", "GET", self.cookies, self.timeout)  # get all transactions
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
@@ -260,7 +260,7 @@ class User:
         :return: a dictionary containing error message/success
         """
 
-        xsrfToken = getXSRFToken(self.timeout, self.proxy) # get the XSRF token
+        xsrfToken = getXSRFToken(self.timeout, self.proxy)  # get the XSRF token
 
         headers = CaseInsensitiveDict()
         headers["xsrf-token"] = xsrfToken
@@ -269,7 +269,7 @@ class User:
         xsrfCookies = self.cookies.copy()
         xsrfCookies["xsrf-token"] = xsrfToken
 
-        resp = requests.post("https://earnapp.com/dashboard/api/link_device?appid=earnapp_dashboard", headers=headers, cookies=xsrfCookies, data='{"uuid":"' + deviceID + '"}', proxies=None if self.proxy == {} else self.proxy, timeout=self.timeout) # do the POST request with the cookies required to the correct endpoint with the data using proxy
+        resp = requests.post("https://earnapp.com/dashboard/api/link_device?appid=earnapp_dashboard", headers=headers, cookies=xsrfCookies, data='{"uuid":"' + deviceID + '"}', proxies=None if self.proxy == {} else self.proxy, timeout=self.timeout)  # do the POST request with the cookies required to the correct endpoint with the data using proxy
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
@@ -281,10 +281,10 @@ class User:
         :return: a dictionary containing error message/success
         """
 
-        if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("hide_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID}, proxy=self.proxy) # send request with proxy
+        if self.proxy != {}:  # if we have a proxy
+            resp = makeEarnAppRequest("hide_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID}, proxy=self.proxy)  # send request with proxy
         else:
-            resp = makeEarnAppRequest("hide_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID}) # send request
+            resp = makeEarnAppRequest("hide_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID})  # send request
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
@@ -296,10 +296,10 @@ class User:
         :return: a dictionary containing error message/success
         """
 
-        if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("show_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID}, proxy=self.proxy) # send request with proxy
+        if self.proxy != {}:  # if we have a proxy
+            resp = makeEarnAppRequest("show_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID}, proxy=self.proxy)  # send request with proxy
         else:
-            resp = makeEarnAppRequest("show_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID}) # send request
+            resp = makeEarnAppRequest("show_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID})  # send request
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
@@ -327,10 +327,10 @@ class User:
         :return: a dictionary containing error message/success
         """
 
-        if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("edit_device/" + deviceID, "PUT", self.cookies, self.timeout, {"name": name}, proxy=self.proxy) # send request with proxy
+        if self.proxy != {}:  # if we have a proxy
+            resp = makeEarnAppRequest("edit_device/" + deviceID, "PUT", self.cookies, self.timeout, {"name": name}, proxy=self.proxy)  # send request with proxy
         else:
-            resp = makeEarnAppRequest("edit_device/" + deviceID, "PUT", self.cookies, self.timeout, {"name": name}) # send request
+            resp = makeEarnAppRequest("edit_device/" + deviceID, "PUT", self.cookies, self.timeout, {"name": name})  # send request
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
@@ -343,10 +343,10 @@ class User:
         :return: a dictionary containing error message/success
         """
 
-        if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("redeem_details", "POST", self.cookies, self.timeout, {"to_email": toEmail, "payment_method": paymentMethod}, proxy=self.proxy) # send request with proxy
+        if self.proxy != {}:  # if we have a proxy
+            resp = makeEarnAppRequest("redeem_details", "POST", self.cookies, self.timeout, {"to_email": toEmail, "payment_method": paymentMethod}, proxy=self.proxy)  # send request with proxy
         else:
-            resp = makeEarnAppRequest("redeem_details", "POST", self.cookies, self.timeout, {"to": toEmail, "payment_method": paymentMethod}) # send request
+            resp = makeEarnAppRequest("redeem_details", "POST", self.cookies, self.timeout, {"to": toEmail, "payment_method": paymentMethod})  # send request
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
 
@@ -358,8 +358,8 @@ class User:
         :return: a dictionary containing the online status of the devices
         """
 
-        if self.proxy != {}: # if we have a proxy
-            resp = makeEarnAppRequest("device_statuses", "POST", self.cookies, self.timeout, {"list": deviceIDs}, proxy=self.proxy) # send request with proxy
+        if self.proxy != {}:  # if we have a proxy
+            resp = makeEarnAppRequest("device_statuses", "POST", self.cookies, self.timeout, {"list": deviceIDs}, proxy=self.proxy)  # send request with proxy
         else:
             resp = makeEarnAppRequest("device_statuses", "POST", self.cookies, self.timeout, {"list": deviceIDs})
 
