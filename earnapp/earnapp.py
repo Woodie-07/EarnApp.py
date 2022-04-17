@@ -41,7 +41,7 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
     :param data (optional): data to send along with the requst
     :return: response object
     """
-    # Wondering why I do this instead of defining {} as the default? See https://bit.ly/3uNINj4
+    # Wondering why I do this? See https://bit.ly/3uNINj4
     if data is None:
         data = {}
     if proxy is None:
@@ -67,7 +67,7 @@ def getXSRFToken(timeout: int, proxy: dict = None):
     :param timeout: the amount of time to wait for a response from the server
     :param proxy (optional): a dictionary containing the proxy to use
     """
-    # Wondering why I do this instead of defining {} as the default? See https://bit.ly/3uNINj4
+    # Wondering why I do this? See https://bit.ly/3uNINj4
     if proxy is None:
         proxy = {}
 
