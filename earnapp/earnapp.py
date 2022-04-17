@@ -105,7 +105,7 @@ class XSRFErrorException(Exception):
 def getReturnData(resp: requests.Response, token: str):
     if resp.status_code == 429: # if the user is ratelimited
         raise RatelimitedException("You are being ratelimited") # raise an exception
-    elif resp.status_code == 403: # if the user is unauthorized
+    if resp.status_code == 403: # if the user is unauthorized
         raise IncorrectTokenException(token + " is not correct") # raise an exception
 
     try:
