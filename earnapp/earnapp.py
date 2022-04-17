@@ -20,28 +20,24 @@ class RatelimitedException(Exception):
     """
     Raised when the IP is ratelimited.
     """
-    pass
 
 
 class IncorrectTokenException(Exception):
     """
     Raised when the oauth-refresh-token is incorrect.
     """
-    pass
 
 
 class JSONDecodeErrorException(Exception):
     """
     Raised when the JSON response is invalid.
     """
-    pass
 
 
 class XSRFErrorException(Exception):
     """
     Raised when the XSRF token is incorrect.
     """
-    pass
 
 
 def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, data: dict = None, proxy: dict = None) -> requests.Response:
