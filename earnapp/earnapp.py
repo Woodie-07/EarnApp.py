@@ -41,7 +41,6 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
     :param data (optional): data to send along with the requst
     :return: response object
     """
-
     # Wondering why I do this instead of defining {} as the default? See https://docs.quantifiedcode.com/python-anti-patterns/correctness/mutable_default_value_as_argument.html
     if data is None:
         data = {}
@@ -70,7 +69,6 @@ def getXSRFToken(timeout: int, proxy: dict = None):
     :param timeout: the amount of time to wait for a response from the server
     :param proxy (optional): a dictionary containing the proxy to use while making the request
     """
-
     # Wondering why I do this instead of defining {} as the default? See https://docs.quantifiedcode.com/python-anti-patterns/correctness/mutable_default_value_as_argument.html
     if proxy is None:
         proxy = {}
@@ -141,7 +139,6 @@ class User:
         :param proxy: proxy dictionary
         :return: True
         """
-
         self.proxy = proxy  # set the proxy
         return True
 
@@ -153,7 +150,6 @@ class User:
         :param method (optional): login method, only current option is google.
         :return: True on successful login, False otherwise
         """
-
         if self.proxy != {}:  # if we have a proxy
             resp = makeEarnAppRequest("user_data", "GET", {"auth-method": method, "oauth-refresh-token": token}, self.timeout, proxy=self.proxy)  # test the login data with the user_data endpoint with the proxy
         else:
@@ -174,7 +170,6 @@ class User:
         Get data about the logged in user
         :return: a dictionary containing the user data
         """
-
         if self.proxy != {}:  # if we have a proxy
             resp = makeEarnAppRequest("user_data", "GET", self.cookies, self.timeout, proxy=self.proxy)  # get the user data with the proxy
         else:
@@ -188,7 +183,6 @@ class User:
         Get data about the logged in user's money (current balance, payment method, etc)
         :return: a dictionary containing the user's money data
         """
-
         if self.proxy != {}:  # if we have a proxy
             resp = makeEarnAppRequest("money", "GET", self.cookies, self.timeout, proxy=self.proxy)  # get the money data with the proxy
         else:
@@ -202,7 +196,6 @@ class User:
         Get data about the logged in user's devices (device IDs, rate, amount earnt, etc)
         :return: a dictionary containing the user's device data
         """
-
         if self.proxy != {}:  # if we have a proxy
             resp = makeEarnAppRequest("devices", "GET", self.cookies, self.timeout, proxy=self.proxy)  # get the device data with the proxy
         else:
@@ -216,7 +209,6 @@ class User:
         Get the latest app version
         :return: a dictionary containing the latest version
         """
-
         if self.proxy != {}:  # if we have a proxy
             resp = makeEarnAppRequest("downloads", "GET", self.cookies, self.timeout, proxy=self.proxy)  # get the app version with the proxy
         else:
@@ -230,7 +222,6 @@ class User:
         Get all available payment methods
         :return: a dictionary containing all available payment methods
         """
-
         if self.proxy != {}:  # if we have a proxy
             resp = makeEarnAppRequest("payment_methods", "GET", self.cookies, self.timeout, proxy=self.proxy)  # get the payment methods with the proxy
         else:
@@ -244,7 +235,6 @@ class User:
         Get past transactions and their status
         :return: a dictionary containing past transactions
         """
-
         if self.proxy != {}:  # if we have a proxy
             resp = makeEarnAppRequest("transactions", "GET", self.cookies, self.timeout, proxy=self.proxy)  # get the transactions with the proxy
         else:
@@ -259,7 +249,6 @@ class User:
         :param deviceID: EarnApp device ID to link to account
         :return: a dictionary containing error message/success
         """
-
         xsrfToken = getXSRFToken(self.timeout, self.proxy)  # get the XSRF token
 
         headers = CaseInsensitiveDict()
@@ -280,7 +269,6 @@ class User:
         :param deviceID: EarnApp device ID to hide from account
         :return: a dictionary containing error message/success
         """
-
         if self.proxy != {}:  # if we have a proxy
             resp = makeEarnAppRequest("hide_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID}, proxy=self.proxy)  # send request with proxy
         else:
@@ -295,7 +283,6 @@ class User:
         :param deviceID: EarnApp device ID to show on account
         :return: a dictionary containing error message/success
         """
-
         if self.proxy != {}:  # if we have a proxy
             resp = makeEarnAppRequest("show_device", "PUT", self.cookies, self.timeout, {"uuid": deviceID}, proxy=self.proxy)  # send request with proxy
         else:
@@ -310,7 +297,6 @@ class User:
         :param deviceID: EarnApp device ID to delete from account
         :return: a dictionary containing error message/success
         """
-
         if self.proxy != {}:
             resp = makeEarnAppRequest("device/" + deviceID, "DELETE", self.cookies, self.timeout, proxy=self.proxy)
         else:
@@ -326,7 +312,6 @@ class User:
         :param name: new name for the device
         :return: a dictionary containing error message/success
         """
-
         if self.proxy != {}:  # if we have a proxy
             resp = makeEarnAppRequest("edit_device/" + deviceID, "PUT", self.cookies, self.timeout, {"name": name}, proxy=self.proxy)  # send request with proxy
         else:
@@ -342,7 +327,6 @@ class User:
         :param paymentMethod: optional payment method to send via
         :return: a dictionary containing error message/success
         """
-
         if self.proxy != {}:  # if we have a proxy
             resp = makeEarnAppRequest("redeem_details", "POST", self.cookies, self.timeout, {"to_email": toEmail, "payment_method": paymentMethod}, proxy=self.proxy)  # send request with proxy
         else:
@@ -357,7 +341,6 @@ class User:
         :param deviceIDs: list of device ID dicts to check (uuid and appid in each dict)
         :return: a dictionary containing the online status of the devices
         """
-
         if self.proxy != {}:  # if we have a proxy
             resp = makeEarnAppRequest("device_statuses", "POST", self.cookies, self.timeout, {"list": deviceIDs}, proxy=self.proxy)  # send request with proxy
         else:
