@@ -17,18 +17,30 @@ from http.cookies import SimpleCookie
 
 
 class RatelimitedException(Exception):
+    """
+    Raised when the IP is ratelimited.
+    """
     pass
 
 
 class IncorrectTokenException(Exception):
+    """
+    Raised when the oauth-refresh-token is incorrect.
+    """
     pass
 
 
 class JSONDecodeErrorException(Exception):
+    """
+    Raised when the JSON response is invalid.
+    """
     pass
 
 
 class XSRFErrorException(Exception):
+    """
+    Raised when the XSRF token is incorrect.
+    """
     pass
 
 
@@ -86,7 +98,12 @@ def getXSRFToken(timeout: int, proxy: dict = None):
     headers["Cache-Control"] = "no-cache"
     headers["TE"] = "trailers"
 
-    resp = requests.get("https://earnapp.com/dashboard/api/sec/rotate_xsrf?appid=earnapp_dashboard&version=1.281.185", headers=headers, proxies=None if proxy == {} else proxy, timeout=timeout)
+    resp = requests.get(
+        "https://earnapp.com/dashboard/api/sec/rotate_xsrf?appid=earnapp_dashboard&version=1.281.185",
+        headers=headers,
+        proxies=None if proxy == {} else proxy,
+        timeout=timeout
+    )
 
     if resp.status_code == 429:  # if the user is ratelimited
         raise RatelimitedException("You are being ratelimited")  # raise an exception
@@ -128,6 +145,10 @@ def getReturnData(resp: requests.Response, token: str):
 
 
 class User:
+    """
+    A class that represents an EarnApp user.
+    This holds the user's token and settings.
+    """
     cookies = {}
     proxy = {}
     timeout = 10  # default timeout for requests
