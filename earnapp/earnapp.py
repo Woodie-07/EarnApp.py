@@ -207,7 +207,7 @@ class User:
 
     def money(self) -> dict:
         """
-        Get data about the logged in user's money (current balance, payment method, etc)
+        Get info such as current balance, payment method, etc.
         :return: a dictionary containing the user's money data
         """
         resp = makeEarnAppRequest(
@@ -222,7 +222,7 @@ class User:
 
     def devices(self) -> dict:
         """
-        Get info about the user's devices (device IDs, rate, amount earnt, etc)
+        Get info such as device IDs, rate, amount earnt, etc.
         :return: a dictionary containing the user's device data
         """
         resp = makeEarnAppRequest(
