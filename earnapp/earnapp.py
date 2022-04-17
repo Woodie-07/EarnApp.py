@@ -47,8 +47,6 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
     if proxy is None:
         proxy = {}
 
-
-
     if reqType == "GET":  # if we need to do a GET request
         resp = requests.get("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=None if proxy == {} else proxy, timeout=timeout)  # do the GET request with the cookies required to the correct endpoint using proxy
     elif reqType == "POST":  # if we need to do a POST request
