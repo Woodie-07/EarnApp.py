@@ -60,13 +60,35 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
         proxy = {}
 
     if reqType == "GET":  # if we need to do a GET request
-        resp = requests.get("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=None if proxy == {} else proxy, timeout=timeout)  # do the GET request with the cookies required to the correct endpoint using proxy
+        resp = requests.get(
+            "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard",
+            cookies=cookies,
+            proxies=None if proxy == {} else proxy,
+            timeout=timeout
+        )  # do the GET request with the cookies required to the correct endpoint using proxy
     elif reqType == "POST":  # if we need to do a POST request
-        resp = requests.post("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, json=data, proxies=None if proxy == {} else proxy, timeout=timeout)  # do the POST request with the cookies required to the correct endpoint with the data using proxy
+        resp = requests.post(
+            "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard",
+            cookies=cookies,
+            json=data,
+            proxies=None if proxy == {} else proxy,
+            timeout=timeout
+        )  # do the POST request with the cookies required to the correct endpoint with the data using proxy
     elif reqType == "DELETE":  # if we need to do a DELETE request
-        resp = requests.delete("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=None if proxy == {} else proxy, timeout=timeout)  # do the DELETE request with the cookies required to the correct endpoint using proxy
+        resp = requests.delete(
+            "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard",
+            cookies=cookies,
+            proxies=None if proxy == {} else proxy,
+            timeout=timeout
+        )  # do the DELETE request with the cookies required to the correct endpoint using proxy
     elif reqType == "PUT":  # if we need to do a PUT request
-       resp = requests.put("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, json=data, proxies=None if proxy == {} else proxy, timeout=timeout)  # do the PUT request with the cookies required to the correct endpoint with the data using proxy
+        resp = requests.put(
+            "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard",
+            cookies=cookies,
+            json=data,
+            proxies=None if proxy == {} else proxy,
+            timeout=timeout
+        )  # do the PUT request with the cookies required to the correct endpoint with the data using proxy
     else:
         return None
     return resp
