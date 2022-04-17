@@ -11,7 +11,7 @@ EarnApp.py is distributed in the hope that it will be useful, but WITHOUT ANY WA
 You should have received a copy of the GNU General Public License along with EarnApp.py. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import requests, datetime
+import requests
 from requests.structures import CaseInsensitiveDict
 from http.cookies import SimpleCookie
 
