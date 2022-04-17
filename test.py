@@ -35,7 +35,7 @@ except earnapp.IncorrectTokenException:
     raise earnapp.IncorrectTokenException
 
 print("Successfully logged in!")
-    
+
 print("User data: " + str(user.userData()))
 print("Money: " + str(user.money()))
 print("Devices: " + str(user.devices()))
