@@ -15,7 +15,7 @@ import requests, datetime
 from requests.structures import CaseInsensitiveDict
 from http.cookies import SimpleCookie
 
-def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, data: dict = {}, proxy: dict = {}) -> requests.Response:
+def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, data: dict = None, proxy: dict = None) -> requests.Response:
     """
     Make a request to the EarnApp API to a given endpoint
     :param endpoint: the API endpoint to request
@@ -24,7 +24,14 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
     :param data (optional): data to send along with the requst
     :return: response object
     """
+
+    # Wondering why I do this instead of defining {} as the default? See https://docs.quantifiedcode.com/python-anti-patterns/correctness/mutable_default_value_as_argument.html
+    if data == None:
+        data = {}
+    if proxy == None:
+        proxy = {}
     
+
     
     if reqType == "GET": # if we need to do a GET request
         resp = requests.get("https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard", cookies=cookies, proxies=None if proxy == {} else proxy, timeout=timeout) # do the GET request with the cookies required to the correct endpoint using proxy
@@ -38,7 +45,16 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
         return None
     return resp
 
-def getXSRFToken(timeout: int, proxy: dict = {}):
+def getXSRFToken(timeout: int, proxy: dict = None):
+    """
+    A function to retrieve the XSRF token from the EarnApp API.
+    This token is required for some endpoints to work.
+    """
+
+    # Wondering why I do this instead of defining {} as the default? See https://docs.quantifiedcode.com/python-anti-patterns/correctness/mutable_default_value_as_argument.html
+    if proxy == None:
+        proxy = {}
+
     headers = CaseInsensitiveDict()
     headers["Host"] = "earnapp.com"
     headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
