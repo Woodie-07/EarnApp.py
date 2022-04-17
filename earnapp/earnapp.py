@@ -26,9 +26,9 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
     """
 
     # Wondering why I do this instead of defining {} as the default? See https://docs.quantifiedcode.com/python-anti-patterns/correctness/mutable_default_value_as_argument.html
-    if data == None:
+    if data is None:
         data = {}
-    if proxy == None:
+    if proxy is None:
         proxy = {}
     
 
@@ -52,7 +52,7 @@ def getXSRFToken(timeout: int, proxy: dict = None):
     """
 
     # Wondering why I do this instead of defining {} as the default? See https://docs.quantifiedcode.com/python-anti-patterns/correctness/mutable_default_value_as_argument.html
-    if proxy == None:
+    if proxy is None:
         proxy = {}
 
     headers = CaseInsensitiveDict()
@@ -110,7 +110,7 @@ def getReturnData(resp: requests.Response, token: str):
 
     try:
         jsonData = resp.json() # attempt to get the JSON data
-    except:
+    except requests.exceptions.JSONDecodeError:
         raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text) # if the JSON data was invalid, raise an exception
     return jsonData
 
