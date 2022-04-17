@@ -49,6 +49,8 @@ def getXSRFToken(timeout: int, proxy: dict = None):
     """
     A function to retrieve the XSRF token from the EarnApp API.
     This token is required for some endpoints to work.
+    :param timeout: the amount of time to wait for a response from the server
+    :param proxy (optional): a dictionary containing the proxy to use while making the request
     """
 
     # Wondering why I do this instead of defining {} as the default? See https://docs.quantifiedcode.com/python-anti-patterns/correctness/mutable_default_value_as_argument.html
@@ -103,6 +105,12 @@ class XSRFErrorException(Exception):
     pass
 
 def getReturnData(resp: requests.Response, token: str):
+    """
+    A function to get the JSON data from the response object.
+    This function may also raise an exception if an error is encountered.
+    :param resp: the response object to get the data from
+    :param token: the EarnApp oauth-refresh-token used for the request. This token may be used when a IncorrectTokenException is raised.
+    """
     if resp.status_code == 429: # if the user is ratelimited
         raise RatelimitedException("You are being ratelimited") # raise an exception
     if resp.status_code == 403: # if the user is unauthorized
