@@ -85,7 +85,7 @@ def getXSRFToken(timeout: int, proxy: dict = None):
         if key == "xsrf-token":
             token = morsel.value
 
-    if token == None:
+    if token is None:
         raise XSRFErrorException("Could not get XSRF token")
 
     return token
