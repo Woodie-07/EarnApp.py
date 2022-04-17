@@ -41,7 +41,7 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
     :param data (optional): data to send along with the requst
     :return: response object
     """
-    # Wondering why I do this instead of defining {} as the default? See https://docs.quantifiedcode.com/python-anti-patterns/correctness/mutable_default_value_as_argument.html
+    # Wondering why I do this instead of defining {} as the default? See https://bit.ly/3uNINj4
     if data is None:
         data = {}
     if proxy is None:
@@ -67,9 +67,9 @@ def getXSRFToken(timeout: int, proxy: dict = None):
     A function to retrieve the XSRF token from the EarnApp API.
     This token is required for some endpoints to work.
     :param timeout: the amount of time to wait for a response from the server
-    :param proxy (optional): a dictionary containing the proxy to use while making the request
+    :param proxy (optional): a dictionary containing the proxy to use
     """
-    # Wondering why I do this instead of defining {} as the default? See https://docs.quantifiedcode.com/python-anti-patterns/correctness/mutable_default_value_as_argument.html
+    # Wondering why I do this instead of defining {} as the default? See https://bit.ly/3uNINj4
     if proxy is None:
         proxy = {}
 
@@ -114,7 +114,8 @@ def getReturnData(resp: requests.Response, token: str):
     A function to get the JSON data from the response object.
     This function may also raise an exception if an error is encountered.
     :param resp: the response object to get the data from
-    :param token: the EarnApp oauth-refresh-token used for the request. This token may be used when a IncorrectTokenException is raised.
+    :param token: the EarnApp oauth-refresh-token used for the request. 
+    This token may be used when a IncorrectTokenException is raised.
     """
     if resp.status_code == 429:  # if the user is ratelimited
         raise RatelimitedException("You are being ratelimited")  # raise an exception
@@ -144,7 +145,8 @@ class User:
 
     def login(self, token: str, method: str="google") -> bool:
         """
-        Attempt to log in to the EarnApp account by requesting the user_data endpoint and if it succeeds, it will write that data to the cookies variable
+        Attempt to log in to the account by requesting /user_data
+        If it succeeds, it will write that data to the cookies variable
         :param token: oauth-refresh-token from the EarnApp dashboard
         :param method (optional): login method, only current option is google.
         :return: True on successful login, False otherwise
@@ -189,7 +191,7 @@ class User:
 
     def devices(self) -> dict:
         """
-        Get data about the logged in user's devices (device IDs, rate, amount earnt, etc)
+        Get info about the user's devices (device IDs, rate, amount earnt, etc)
         :return: a dictionary containing the user's device data
         """
         if self.proxy != {}:  # if we have a proxy
