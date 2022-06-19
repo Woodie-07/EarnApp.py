@@ -177,7 +177,7 @@ class User:
     A class that represents an EarnApp user.
     This holds the user's token and settings.
     """
-    
+
     cookies = {}
     proxy = {}
     timeout = 10  # default timeout for requests
