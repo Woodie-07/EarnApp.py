@@ -14,6 +14,8 @@ You should have received a copy of the GNU General Public License along with Ear
 import requests
 from requests.structures import CaseInsensitiveDict
 from http.cookies import SimpleCookie
+import time
+from json.decoder import JSONDecodeError
 
 
 class RatelimitedException(Exception):
@@ -39,8 +41,7 @@ class XSRFErrorException(Exception):
     Raised when the XSRF token is incorrect.
     """
 
-
-def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, data: dict = None, proxy: dict = None) -> requests.Response:
+def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, headers: dict, data: dict = None, proxy: dict = None) -> requests.Response:
     """
     Make a request to the EarnApp API to a given endpoint
     :param endpoint: the API endpoint to request
@@ -55,12 +56,15 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
     if proxy is None:
         proxy = {}
 
+
+
     if reqType == "GET":  # if we need to do a GET request
         resp = requests.get(
             "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard",
             cookies=cookies,
             proxies=None if proxy == {} else proxy,
-            timeout=timeout
+            timeout=timeout,
+            headers=headers
         )  # do the GET request with the cookies required to the correct endpoint using proxy
     elif reqType == "POST":  # if we need to do a POST request
         resp = requests.post(
@@ -68,14 +72,16 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
             cookies=cookies,
             json=data,
             proxies=None if proxy == {} else proxy,
-            timeout=timeout
+            timeout=timeout,
+            headers=headers
         )  # do the POST request with the cookies required to the correct endpoint with the data using proxy
     elif reqType == "DELETE":  # if we need to do a DELETE request
         resp = requests.delete(
             "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard",
             cookies=cookies,
             proxies=None if proxy == {} else proxy,
-            timeout=timeout
+            timeout=timeout,
+            headers=headers
         )  # do the DELETE request with the cookies required to the correct endpoint using proxy
     elif reqType == "PUT":  # if we need to do a PUT request
         resp = requests.put(
@@ -83,14 +89,15 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
             cookies=cookies,
             json=data,
             proxies=None if proxy == {} else proxy,
-            timeout=timeout
+            timeout=timeout,
+            headers=headers
         )  # do the PUT request with the cookies required to the correct endpoint with the data using proxy
     else:
         return None
     return resp
 
 
-def getXSRFToken(timeout: int, proxy: dict = None):
+def getXSRFToken(timeout: int, xsrfToken: str, xsrfTokenTime: int, proxy: dict = None):
     """
     A function to retrieve the XSRF token from the EarnApp API.
     This token is required for some endpoints to work.
@@ -100,6 +107,10 @@ def getXSRFToken(timeout: int, proxy: dict = None):
     # Wondering why I do this? See https://bit.ly/3uNINj4
     if proxy is None:
         proxy = {}
+
+    currentTime = int(time.time())
+    if currentTime - 60 < xsrfTokenTime: # 60 second token expiration
+        return xsrfToken, False # return false to indicate the time shoudn't be updated
 
     headers = CaseInsensitiveDict()
     headers["Host"] = "earnapp.com"
@@ -138,7 +149,7 @@ def getXSRFToken(timeout: int, proxy: dict = None):
     if token is None:
         raise XSRFErrorException("Could not get XSRF token")
 
-    return token
+    return token, currentTime # return the time to show the time should be updated
 
 
 def getReturnData(resp: requests.Response, token: str):
@@ -156,7 +167,7 @@ def getReturnData(resp: requests.Response, token: str):
 
     try:
         jsonData = resp.json()  # attempt to get the JSON data
-    except requests.exceptions.JSONDecodeError:
+    except JSONDecodeError:
         raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text)  # if the JSON data was invalid, raise an exception
     return jsonData
 
@@ -170,6 +181,9 @@ class User:
     cookies = {}
     proxy = {}
     timeout = 10  # default timeout for requests
+
+    xsrfToken = ""
+    xsrfTokenTime = 0
 
     def setProxy(self, proxy: dict) -> bool:
         """
@@ -188,19 +202,25 @@ class User:
         :param method (optional): login method, only current option is google.
         :return: True on successful login, False otherwise
         """
+        xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
+        if xsrfTokenInfo[1] != False:
+            self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
+        self.xsrfToken = xsrfTokenInfo[0]
         resp = makeEarnAppRequest(
             "user_data",
             "GET",
             {
                 "auth-method": method,
-                "oauth-refresh-token": token
+                "oauth-refresh-token": token,
+                "xsrf-token": self.xsrfToken
             },
             self.timeout,
+            {"xsrf-token": self.xsrfToken},
             proxy=self.proxy
         )
 
         if resp.status_code == 200:  # if the cookies were valid
-            self.cookies = {"auth-method": method, "oauth-refresh-token": token}  # save the cookies to the variable
+            self.cookies = {"auth-method": method, "oauth-refresh-token": token, "xsrf-token": self.xsrfToken}  # save the cookies to the variable
             # return the right value depending on succeeding/failing
             return True
         if resp.status_code == 403:
@@ -213,11 +233,17 @@ class User:
         Get data about the logged in user
         :return: a dictionary containing the user data
         """
+        xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
+        if xsrfTokenInfo[1] != False:
+            self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
+        self.xsrfToken = xsrfTokenInfo[0]
+        self.cookies["xsrf-token"] = self.xsrfToken
         resp = makeEarnAppRequest(
             "user_data",
             "GET",
             self.cookies,
             self.timeout,
+            {"xsrf-token": self.xsrfToken},
             proxy=self.proxy
         )
 
@@ -228,11 +254,17 @@ class User:
         Get info such as current balance, payment method, etc.
         :return: a dictionary containing the user's money data
         """
+        xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
+        if xsrfTokenInfo[1] != False:
+            self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
+        self.xsrfToken = xsrfTokenInfo[0]
+        self.cookies["xsrf-token"] = self.xsrfToken
         resp = makeEarnAppRequest(
             "money",
             "GET",
             self.cookies,
             self.timeout,
+            {"xsrf-token": self.xsrfToken},
             proxy=self.proxy
         )
 
@@ -243,11 +275,17 @@ class User:
         Get info such as device IDs, rate, amount earnt, etc.
         :return: a dictionary containing the user's device data
         """
+        xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
+        if xsrfTokenInfo[1] != False:
+            self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
+        self.xsrfToken = xsrfTokenInfo[0]
+        self.cookies["xsrf-token"] = self.xsrfToken
         resp = makeEarnAppRequest(
             "devices",
             "GET",
             self.cookies,
             self.timeout,
+            {"xsrf-token": self.xsrfToken},
             proxy=self.proxy
         )
 
@@ -258,11 +296,17 @@ class User:
         Get the latest app version
         :return: a dictionary containing the latest version
         """
+        xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
+        if xsrfTokenInfo[1] != False:
+            self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
+        self.xsrfToken = xsrfTokenInfo[0]
+        self.cookies["xsrf-token"] = self.xsrfToken
         resp = makeEarnAppRequest(
             "downloads",
             "GET",
             self.cookies,
             self.timeout,
+            {"xsrf-token": self.xsrfToken},
             proxy=self.proxy
         )
 
@@ -273,11 +317,17 @@ class User:
         Get all available payment methods
         :return: a dictionary containing all available payment methods
         """
+        xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
+        if xsrfTokenInfo[1] != False:
+            self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
+        self.xsrfToken = xsrfTokenInfo[0]
+        self.cookies["xsrf-token"] = self.xsrfToken
         resp = makeEarnAppRequest(
             "payment_methods",
             "GET",
             self.cookies,
             self.timeout,
+            {"xsrf-token": self.xsrfToken},
             proxy=self.proxy
         )
 
@@ -288,11 +338,17 @@ class User:
         Get past transactions and their status
         :return: a dictionary containing past transactions
         """
+        xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
+        if xsrfTokenInfo[1] != False:
+            self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
+        self.xsrfToken = xsrfTokenInfo[0]
+        self.cookies["xsrf-token"] = self.xsrfToken
         resp = makeEarnAppRequest(
             "transactions",
             "GET",
             self.cookies,
             self.timeout,
+            {"xsrf-token": self.xsrfToken},
             proxy=self.proxy
         )
 
@@ -304,22 +360,19 @@ class User:
         :param deviceID: EarnApp device ID to link to account
         :return: a dictionary containing error message/success
         """
-        xsrfToken = getXSRFToken(self.timeout, self.proxy)  # get the XSRF token
-
-        headers = CaseInsensitiveDict()
-        headers["xsrf-token"] = xsrfToken
-        headers["Content-Type"] = "application/json"
-
-        xsrfCookies = self.cookies.copy()
-        xsrfCookies["xsrf-token"] = xsrfToken
-
-        resp = requests.post(
-            "https://earnapp.com/dashboard/api/link_device?appid=earnapp_dashboard",
-            headers=headers,
-            cookies=xsrfCookies,
-            data='{"uuid":"' + deviceID + '"}',
-            proxies=None if self.proxy == {} else self.proxy,
-            timeout=self.timeout
+        xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
+        if xsrfTokenInfo[1] != False:
+            self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
+        self.xsrfToken = xsrfTokenInfo[0]
+        self.cookies["xsrf-token"] = self.xsrfToken
+        resp = makeEarnAppRequest(
+            "link_device",
+            "POST",
+            self.cookies,
+            self.timeout,
+            {"xsrf-token": self.xsrfToken},
+            data={"uuid": deviceID},
+            proxy=self.proxy
         )  # do the POST request with the XSRF token
 
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
@@ -330,12 +383,18 @@ class User:
         :param deviceID: EarnApp device ID to hide from account
         :return: a dictionary containing error message/success
         """
+        xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
+        if xsrfTokenInfo[1] != False:
+            self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
+        self.xsrfToken = xsrfTokenInfo[0]
+        self.cookies["xsrf-token"] = self.xsrfToken
         resp = makeEarnAppRequest(
             "hide_device",
             "PUT",
             self.cookies,
             self.timeout,
-            {"uuid": deviceID},
+            {"xsrf-token": self.xsrfToken},
+            data={"uuid": deviceID},
             proxy=self.proxy
         )
 
@@ -347,14 +406,18 @@ class User:
         :param deviceID: EarnApp device ID to show on account
         :return: a dictionary containing error message/success
         """
+        xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
+        if xsrfTokenInfo[1] != False:
+            self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
+        self.xsrfToken = xsrfTokenInfo[0]
+        self.cookies["xsrf-token"] = self.xsrfToken
         resp = makeEarnAppRequest(
             "show_device",
             "PUT",
             self.cookies,
             self.timeout,
-            {
-                "uuid": deviceID
-            },
+            {"xsrf-token": self.xsrfToken},
+            data={"uuid": deviceID},
             proxy=self.proxy
         )
 
@@ -366,11 +429,17 @@ class User:
         :param deviceID: EarnApp device ID to delete from account
         :return: a dictionary containing error message/success
         """
+        xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
+        if xsrfTokenInfo[1] != False:
+            self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
+        self.xsrfToken = xsrfTokenInfo[0]
+        self.cookies["xsrf-token"] = self.xsrfToken
         resp = makeEarnAppRequest(
             "device/" + deviceID,
             "DELETE",
             self.cookies,
             self.timeout,
+            {"xsrf-token": self.xsrfToken},
             proxy=self.proxy
         )
 
@@ -383,14 +452,18 @@ class User:
         :param name: new name for the device
         :return: a dictionary containing error message/success
         """
+        xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
+        if xsrfTokenInfo[1] != False:
+            self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
+        self.xsrfToken = xsrfTokenInfo[0]
+        self.cookies["xsrf-token"] = self.xsrfToken
         resp = makeEarnAppRequest(
             "edit_device/" + deviceID,
             "PUT",
             self.cookies,
             self.timeout,
-            {
-                "name": name
-            },
+            {"xsrf-token": self.xsrfToken},
+            data={"name": name},
             proxy=self.proxy
         )
 
@@ -403,11 +476,18 @@ class User:
         :param paymentMethod: optional payment method to send via
         :return: a dictionary containing error message/success
         """
+        xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
+        if xsrfTokenInfo[1] != False:
+            self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
+        self.xsrfToken = xsrfTokenInfo[0]
+        self.cookies["xsrf-token"] = self.xsrfToken
         resp = makeEarnAppRequest(
             "redeem_details",
-            "POST", self.cookies,
+            "POST", 
+            self.cookies,
             self.timeout,
-            {
+            {"xsrf-token": self.xsrfToken},
+            data={
                 "to_email": toEmail,
                 "payment_method": paymentMethod
             },
@@ -422,12 +502,18 @@ class User:
         :param deviceIDs: list of device ID dicts to check (uuid and appid in each dict)
         :return: a dictionary containing the online status of the devices
         """
+        xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
+        if xsrfTokenInfo[1] != False:
+            self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
+        self.xsrfToken = xsrfTokenInfo[0]
+        self.cookies["xsrf-token"] = self.xsrfToken
         resp = makeEarnAppRequest(
             "device_statuses",
             "POST",
             self.cookies,
             self.timeout,
-            {"list": deviceIDs},
+            {"xsrf-token": self.xsrfToken},
+            data={"list": deviceIDs},
             proxy=self.proxy
         )
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
