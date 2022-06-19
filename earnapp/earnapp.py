@@ -132,7 +132,6 @@ def getXSRFToken(timeout: int, proxy: dict = None):
     token = None
 
     for key, morsel in cookie.items():
-
         if key == "xsrf-token":
             token = morsel.value
 
