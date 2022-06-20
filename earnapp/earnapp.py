@@ -41,6 +41,7 @@ class XSRFErrorException(Exception):
     Raised when the XSRF token is incorrect.
     """
 
+
 def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, headers: dict, data: dict = None, proxy: dict = None) -> requests.Response:
     """
     Make a request to the EarnApp API to a given endpoint
