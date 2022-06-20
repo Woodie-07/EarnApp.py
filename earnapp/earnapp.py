@@ -203,7 +203,7 @@ class User:
         :return: True on successful login, False otherwise
         """
         xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
-        if xsrfTokenInfo[1] != False:
+        if xsrfTokenInfo[1] is not False:
             self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
         self.xsrfToken = xsrfTokenInfo[0]
         resp = makeEarnAppRequest(
@@ -234,7 +234,7 @@ class User:
         :return: a dictionary containing the user data
         """
         xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
-        if xsrfTokenInfo[1] != False:
+        if xsrfTokenInfo[1] is not False:
             self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
         self.xsrfToken = xsrfTokenInfo[0]
         self.cookies["xsrf-token"] = self.xsrfToken
@@ -255,7 +255,7 @@ class User:
         :return: a dictionary containing the user's money data
         """
         xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
-        if xsrfTokenInfo[1] != False:
+        if xsrfTokenInfo[1] is not False:
             self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
         self.xsrfToken = xsrfTokenInfo[0]
         self.cookies["xsrf-token"] = self.xsrfToken
@@ -276,7 +276,7 @@ class User:
         :return: a dictionary containing the user's device data
         """
         xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
-        if xsrfTokenInfo[1] != False:
+        if xsrfTokenInfo[1] is not False:
             self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
         self.xsrfToken = xsrfTokenInfo[0]
         self.cookies["xsrf-token"] = self.xsrfToken
@@ -297,7 +297,7 @@ class User:
         :return: a dictionary containing the latest version
         """
         xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
-        if xsrfTokenInfo[1] != False:
+        if xsrfTokenInfo[1] is not False:
             self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
         self.xsrfToken = xsrfTokenInfo[0]
         self.cookies["xsrf-token"] = self.xsrfToken
@@ -318,7 +318,7 @@ class User:
         :return: a dictionary containing all available payment methods
         """
         xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
-        if xsrfTokenInfo[1] != False:
+        if xsrfTokenInfo[1] is not False:
             self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
         self.xsrfToken = xsrfTokenInfo[0]
         self.cookies["xsrf-token"] = self.xsrfToken
@@ -339,7 +339,7 @@ class User:
         :return: a dictionary containing past transactions
         """
         xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
-        if xsrfTokenInfo[1] != False:
+        if xsrfTokenInfo[1] is not False:
             self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
         self.xsrfToken = xsrfTokenInfo[0]
         self.cookies["xsrf-token"] = self.xsrfToken
@@ -361,7 +361,7 @@ class User:
         :return: a dictionary containing error message/success
         """
         xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
-        if xsrfTokenInfo[1] != False:
+        if xsrfTokenInfo[1] is not False:
             self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
         self.xsrfToken = xsrfTokenInfo[0]
         self.cookies["xsrf-token"] = self.xsrfToken
@@ -384,7 +384,7 @@ class User:
         :return: a dictionary containing error message/success
         """
         xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
-        if xsrfTokenInfo[1] != False:
+        if xsrfTokenInfo[1] is not False:
             self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
         self.xsrfToken = xsrfTokenInfo[0]
         self.cookies["xsrf-token"] = self.xsrfToken
@@ -407,7 +407,7 @@ class User:
         :return: a dictionary containing error message/success
         """
         xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
-        if xsrfTokenInfo[1] != False:
+        if xsrfTokenInfo[1] is not False:
             self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
         self.xsrfToken = xsrfTokenInfo[0]
         self.cookies["xsrf-token"] = self.xsrfToken
@@ -430,7 +430,7 @@ class User:
         :return: a dictionary containing error message/success
         """
         xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
-        if xsrfTokenInfo[1] != False:
+        if xsrfTokenInfo[1] is not False:
             self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
         self.xsrfToken = xsrfTokenInfo[0]
         self.cookies["xsrf-token"] = self.xsrfToken
@@ -453,7 +453,7 @@ class User:
         :return: a dictionary containing error message/success
         """
         xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
-        if xsrfTokenInfo[1] != False:
+        if xsrfTokenInfo[1] is not False:
             self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
         self.xsrfToken = xsrfTokenInfo[0]
         self.cookies["xsrf-token"] = self.xsrfToken
@@ -477,7 +477,7 @@ class User:
         :return: a dictionary containing error message/success
         """
         xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
-        if xsrfTokenInfo[1] != False:
+        if xsrfTokenInfo[1] is not False:
             self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
         self.xsrfToken = xsrfTokenInfo[0]
         self.cookies["xsrf-token"] = self.xsrfToken
@@ -503,7 +503,7 @@ class User:
         :return: a dictionary containing the online status of the devices
         """
         xsrfTokenInfo = getXSRFToken(self.timeout, self.xsrfToken, self.xsrfTokenTime, proxy=self.proxy)
-        if xsrfTokenInfo[1] != False:
+        if xsrfTokenInfo[1] is not False:
             self.xsrfTokenTime = xsrfTokenInfo[1] # set the update time to the time the token was retrieved
         self.xsrfToken = xsrfTokenInfo[0]
         self.cookies["xsrf-token"] = self.xsrfToken
