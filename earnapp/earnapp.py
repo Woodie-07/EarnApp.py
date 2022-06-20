@@ -19,27 +19,19 @@ from json.decoder import JSONDecodeError
 
 
 class RatelimitedException(Exception):
-    """
-    Raised when the IP is ratelimited.
-    """
+    """Raised when the IP is ratelimited."""
 
 
 class IncorrectTokenException(Exception):
-    """
-    Raised when the oauth-refresh-token is incorrect.
-    """
+    """Raised when the oauth-refresh-token is incorrect."""
 
 
 class JSONDecodeErrorException(Exception):
-    """
-    Raised when the JSON response is invalid.
-    """
+    """Raised when the JSON response is invalid."""
 
 
 class XSRFErrorException(Exception):
-    """
-    Raised when the XSRF token is incorrect.
-    """
+    """Raised when the XSRF token is incorrect."""
 
 def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, headers: dict, data: dict = None, proxy: dict = None) -> requests.Response:
     """
