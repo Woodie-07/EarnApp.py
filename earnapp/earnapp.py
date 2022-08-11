@@ -33,8 +33,12 @@ class JSONDecodeErrorException(Exception):
 class XSRFErrorException(Exception):
     """Raised when the XSRF token is incorrect."""
 
+class InvalidTimeframeException(Exception):
+    """
+    Raised when the given timeframe is invalid (must be 'daily', 'weekly', or 'monthly').
+    """
 
-def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, headers: dict, data: dict = None, proxy: dict = None) -> requests.Response:
+def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, headers: dict, data: dict = None, proxy: dict = None, queryParams: str = "") -> requests.Response:
     """
     Make a request to the EarnApp API to a given endpoint
     :param endpoint: the API endpoint to request
@@ -53,7 +57,7 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
 
     if reqType == "GET":  # if we need to do a GET request
         resp = requests.get(
-            "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard",
+            "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard" + queryParams,
             cookies=cookies,
             proxies=None if proxy == {} else proxy,
             timeout=timeout,
@@ -61,7 +65,7 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
         )  # do the GET request with the cookies required to the correct endpoint using proxy
     elif reqType == "POST":  # if we need to do a POST request
         resp = requests.post(
-            "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard",
+            "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard" + queryParams,
             cookies=cookies,
             json=data,
             proxies=None if proxy == {} else proxy,
@@ -70,7 +74,7 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
         )  # do the POST request with the cookies required to the correct endpoint with the data using proxy
     elif reqType == "DELETE":  # if we need to do a DELETE request
         resp = requests.delete(
-            "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard",
+            "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard" + queryParams,
             cookies=cookies,
             proxies=None if proxy == {} else proxy,
             timeout=timeout,
@@ -78,7 +82,7 @@ def makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int,
         )  # do the DELETE request with the cookies required to the correct endpoint using proxy
     elif reqType == "PUT":  # if we need to do a PUT request
         resp = requests.put(
-            "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard",
+            "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard" + queryParams,
             cookies=cookies,
             json=data,
             proxies=None if proxy == {} else proxy,
@@ -509,4 +513,25 @@ class User:
             data={"list": deviceIDs},
             proxy=self.proxy
         )
+        return getReturnData(resp, self.cookies["oauth-refresh-token"])
+
+    def usage(self, step: str = "daily") -> dict:
+        """
+        Get the usage of all devices on the logged in account, including deleted devices
+        :param step: the timeframe to get usage for (daily, weekly, monthly), default daily
+        :return: a dictionary containing the usage
+        """
+
+        if step not in ["daily", "weekly", "monthly"]:
+            raise InvalidTimeframeException
+
+        resp = makeEarnAppRequest(
+            "usage",
+            "GET",
+            self.cookies,
+            self.timeout,
+            proxy=self.proxy,
+            queryParams="&step=" + step
+        )
+
         return getReturnData(resp, self.cookies["oauth-refresh-token"])
