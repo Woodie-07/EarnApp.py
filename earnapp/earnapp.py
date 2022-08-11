@@ -530,6 +530,7 @@ class User:
             "GET",
             self.cookies,
             self.timeout,
+            {"xsrf-token": self.xsrfToken},
             proxy=self.proxy,
             queryParams="&step=" + step
         )
