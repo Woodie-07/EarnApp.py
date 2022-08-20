@@ -36,11 +36,13 @@ class JSONDecodeErrorException(Exception):
 class XSRFErrorException(Exception):
     """Raised when the XSRF token is incorrect."""
 
+
 class InvalidTimeframeException(Exception):
     """
     Raised when the given timeframe is invalid.
     Must be 'daily', 'weekly', or 'monthly'.
     """
+
 
 def _makeEarnAppRequest(
     endpoint: str,
