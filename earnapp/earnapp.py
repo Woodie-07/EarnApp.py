@@ -34,9 +34,7 @@ class XSRFErrorException(Exception):
     """Raised when the XSRF token is incorrect."""
 
 class InvalidTimeframeException(Exception):
-    """
-    Raised when the given timeframe is invalid (must be 'daily', 'weekly', or 'monthly').
-    """
+    """Raised when the given timeframe is invalid (must be 'daily', 'weekly', or 'monthly')."""
 
 def _makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, headers: dict, data: dict = None, proxy: dict = None, queryParams: str = "") -> requests.Response:
     """
