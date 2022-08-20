@@ -17,6 +17,9 @@ from http.cookies import SimpleCookie
 import time
 from json.decoder import JSONDecodeError
 
+apiURL = "https://earnapp.com/dashboard/api/"
+appID = "earnapp_dashboard"
+
 
 class RatelimitedException(Exception):
     """Raised when the IP is ratelimited."""
@@ -34,9 +37,21 @@ class XSRFErrorException(Exception):
     """Raised when the XSRF token is incorrect."""
 
 class InvalidTimeframeException(Exception):
-    """Raised when the given timeframe is invalid (must be 'daily', 'weekly', or 'monthly')."""
+    """
+    Raised when the given timeframe is invalid 
+    Must be 'daily', 'weekly', or 'monthly'.
+    """
 
-def _makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int, headers: dict, data: dict = None, proxy: dict = None, queryParams: str = "") -> requests.Response:
+def _makeEarnAppRequest(
+    endpoint: str,
+    reqType: str,
+    cookies: dict,
+    timeout: int,
+    headers: dict,
+    data: dict = None,
+    proxy: dict = None,
+    queryParams: str = ""
+) -> requests.Response:
     """
     Make a request to the EarnApp API to a given endpoint
     :param endpoint: the API endpoint to request
@@ -51,8 +66,9 @@ def _makeEarnAppRequest(endpoint: str, reqType: str, cookies: dict, timeout: int
     if proxy is None:
         proxy = {}
 
+    queryParams = "?appid=" + appID + queryParams
 
-    url = "https://earnapp.com/dashboard/api/" + endpoint + "?appid=earnapp_dashboard" + queryParams
+    url = apiURL + endpoint + queryParams
 
     resp = requests.request(
         reqType,
@@ -94,7 +110,7 @@ def getXSRFToken(timeout: int, proxy: dict = None):
     headers["TE"] = "trailers"
 
     resp = requests.get(
-        "https://earnapp.com/dashboard/api/sec/rotate_xsrf?appid=earnapp_dashboard&version=1.281.185",
+        apiURL + "/sec/rotate_xsrf?appid=" + appID + "&version=1.281.185",
         headers=headers,
         proxies=None if proxy == {} else proxy,
         timeout=timeout
@@ -168,14 +184,20 @@ class User:
             return self.xsrfToken
 
         xsrfToken = getXSRFToken(self.timeout, proxy=self.proxy)
-        self.xsrfTokenTime = currentTime # set the update time to the time the token was retrieved
+        self.xsrfTokenTime = currentTime # set the update time
         self.xsrfToken = xsrfToken
         self.cookies["xsrf-token"] = xsrfToken
         self.headers["xsrf-token"] = xsrfToken
 
         return self.xsrfToken
 
-    def simpleEarnAppRequest(self, endpoint: str, method: str, data: dict = None, queryParams: str = ""):
+    def simpleEarnAppRequest(
+        self,
+        endpoint: str,
+        method: str,
+        data: dict = None,
+        queryParams: str = ""
+    ) -> requests.Response:
         self._updateXSRFTokenIfNecessary()
         resp = _makeEarnAppRequest(
             endpoint,
@@ -213,13 +235,17 @@ class User:
         )
 
         if resp.status_code == 200:  # if the cookies were valid
-            self.cookies = {"auth-method": method, "oauth-refresh-token": token, "xsrf-token": self.xsrfToken}  # save the cookies to the variable
+            self.cookies = {  # save the cookies to the variable
+                "auth-method": method,
+                "oauth-refresh-token": token,
+                "xsrf-token": self.xsrfToken
+            }
             # return the right value depending on succeeding/failing
             return True
         if resp.status_code == 403:
-            raise IncorrectTokenException("Token is not correct")  # if the token was invalid, raise an exception
+            raise IncorrectTokenException("Token is not correct")
 
-        raise RatelimitedException("Some kind of an error when logging in, probably ratelimited.")
+        raise RatelimitedException("Error when logging in, probably ratelimited.")
 
     def userData(self) -> dict:
         """
@@ -269,7 +295,11 @@ class User:
         :param deviceID: EarnApp device ID to link to account
         :return: a dictionary containing error message/success
         """
-        return self.simpleEarnAppRequest("link_device", "POST", data={"uuid": deviceID})
+        return self.simpleEarnAppRequest(
+            "link_device",
+            "POST",
+            data={"uuid": deviceID}
+        )
 
     def hideDevice(self, deviceID: str) -> dict:
         """
@@ -277,7 +307,11 @@ class User:
         :param deviceID: EarnApp device ID to hide from account
         :return: a dictionary containing error message/success
         """
-        return self.simpleEarnAppRequest("hide_device", "PUT", data={"uuid": deviceID})
+        return self.simpleEarnAppRequest(
+            "hide_device",
+            "PUT",
+            data={"uuid": deviceID}
+        )
 
     def showDevice(self, deviceID: str) -> dict:
         """
@@ -285,7 +319,11 @@ class User:
         :param deviceID: EarnApp device ID to show on account
         :return: a dictionary containing error message/success
         """
-        return self.simpleEarnAppRequest("show_device", "PUT", data={"uuid": deviceID})
+        return self.simpleEarnAppRequest(
+            "show_device",
+            "PUT",
+            data={"uuid": deviceID}
+        )
 
     def deleteDevice(self, deviceID: str) -> dict:
         """
@@ -302,7 +340,11 @@ class User:
         :param name: new name for the device
         :return: a dictionary containing error message/success
         """
-        return self.simpleEarnAppRequest("edit_device/" + deviceID, "PUT", data={"name": name})
+        return self.simpleEarnAppRequest(
+            "edit_device/" + deviceID,
+            "PUT",
+            data={"name": name}
+        )
 
     def redeemDetails(self, toEmail: str, paymentMethod: str="paypal.com") -> dict:
         """
@@ -311,7 +353,14 @@ class User:
         :param paymentMethod: optional payment method to send via
         :return: a dictionary containing error message/success
         """
-        return self.simpleEarnAppRequest("redeem_details", "POST", data={"to_email": toEmail, "payment_method": paymentMethod})
+        return self.simpleEarnAppRequest(
+            "redeem_details", 
+            "POST", 
+            data={
+                "to_email": toEmail,
+                "payment_method": paymentMethod
+            }
+        )
 
     def onlineStatus(self, deviceIDs: list) -> dict:
         """
@@ -319,15 +368,23 @@ class User:
         :param deviceIDs: list of device ID dicts to check (uuid and appid in each dict)
         :return: a dictionary containing the online status of the devices
         """
-        return self.simpleEarnAppRequest("device_statuses", "POST", data={"list": deviceIDs})
+        return self.simpleEarnAppRequest(
+            "device_statuses",
+            "POST",
+            data={"list": deviceIDs}
+        )
 
     def usage(self, step: str = "daily") -> dict:
         """
         Get the usage of all devices on the logged in account, including deleted devices
-        :param step: the timeframe to get usage for (daily, weekly, monthly), default daily
+        :param step: the timeframe of usage (daily, weekly, monthly), default daily
         :return: a dictionary containing the usage
         """
         if step not in ["daily", "weekly", "monthly"]:
             raise InvalidTimeframeException
 
-        return self.simpleEarnAppRequest("usage", "GET", queryParams="&step=" + step)
+        return self.simpleEarnAppRequest(
+            "usage",
+            "GET",
+            queryParams="&step=" + step
+        )
