@@ -136,7 +136,7 @@ def getXSRFToken(timeout: int, proxy: dict = None):
     return token
 
 
-def _getReturnData(resp: requests.Response):
+def _getReturnData(resp: requests.Response) -> dict:
     """
     A function to get the JSON data from the response object.
     This function may also raise an exception if an error is encountered.
@@ -180,6 +180,10 @@ class User:
         return True
 
     def _updateXSRFTokenIfNecessary(self):
+        """
+        Will update the XSRF token if it is older than 60 seconds.
+        :return: the XSRF token
+        """
         currentTime = int(time.time())
         if currentTime - 60 < self.xsrfTokenTime:  # 60 second token expiration
             return self.xsrfToken
@@ -199,6 +203,13 @@ class User:
         data: dict = None,
         queryParams: str = ""
     ) -> requests.Response:
+        """
+        A function to call a given endpoint. It handles XSRF and return data.
+        :param endpoint: the endpoint to call
+        :param method: the method to use (GET, POST, DELETE or PUT)
+        :param data (optional): JSON data to send
+        :param queryParams (optional): URL query parameters to send
+        """
         self._updateXSRFTokenIfNecessary()
         resp = _makeEarnAppRequest(
             endpoint,
