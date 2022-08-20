@@ -11,6 +11,7 @@ EarnApp.py is distributed in the hope that it will be useful, but WITHOUT ANY WA
 You should have received a copy of the GNU General Public License along with EarnApp.py. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from http import client
 import requests
 from requests.structures import CaseInsensitiveDict
 from http.cookies import SimpleCookie
@@ -18,6 +19,7 @@ import time
 from json.decoder import JSONDecodeError
 
 apiURL = "https://earnapp.com/dashboard/api/"
+clientAPIURL = "https://client.earnapp.com/"
 appID = "earnapp_dashboard"
 
 
@@ -43,10 +45,40 @@ class InvalidTimeframeException(Exception):
     Must be 'daily', 'weekly', or 'monthly'.
     """
 
+class InvalidArgumentsException(Exception):
+    """Raised when the given client arguments are invalid."""
+
+
+def _makeClientRequest(
+    endpoint: str,
+    method: str,
+    data: dict = None,
+    proxy: dict = None
+) -> requests.Response:
+    """
+    Make a request to the EarnApp Client API to a given endpoint
+    :param endpoint: the API endpoint to request
+    :param method: GET, POST, DELETE or PUT
+    :param data (optional): data to send along with the requst
+    :param proxy (optional): a dictionary containing the proxy to use
+    :return: response object
+    """
+
+    url = clientAPIURL + endpoint
+
+    resp = requests.request(
+        method,
+        url,
+        json=data,
+        proxies=proxy
+    )
+
+    return resp
+
 
 def _makeEarnAppRequest(
     endpoint: str,
-    reqType: str,
+    method: str,
     cookies: dict,
     timeout: int,
     headers: dict,
@@ -57,27 +89,25 @@ def _makeEarnAppRequest(
     """
     Make a request to the EarnApp API to a given endpoint
     :param endpoint: the API endpoint to request
-    :param reqType: GET, POST, DELETE or PUT
+    :param method: GET, POST, DELETE or PUT
     :param cookies: authentication cookies to send with the request
+    :param timeout: the amount of time to wait for a response
     :param data (optional): data to send along with the requst
+    :param proxy (optional): a dictionary containing the proxy to use
+    :param queryParams (optional): query parameters to send along with the request
     :return: response object
     """
-    # Wondering why I do this? See https://bit.ly/3uNINj4
-    if data is None:
-        data = {}
-    if proxy is None:
-        proxy = {}
 
     queryParams = "?appid=" + appID + queryParams
 
     url = apiURL + endpoint + queryParams
 
     resp = requests.request(
-        reqType,
+        method,
         url,
         cookies=cookies,
         json=data,
-        proxies=None if proxy == {} else proxy,
+        proxies=proxy,
         timeout=timeout,
         headers=headers
     )
@@ -92,9 +122,6 @@ def getXSRFToken(timeout: int, proxy: dict = None):
     :param timeout: the amount of time to wait for a response from the server
     :param proxy (optional): a dictionary containing the proxy to use
     """
-    # Wondering why I do this? See https://bit.ly/3uNINj4
-    if proxy is None:
-        proxy = {}
 
     headers = CaseInsensitiveDict()
     headers["Host"] = "earnapp.com"
@@ -114,7 +141,7 @@ def getXSRFToken(timeout: int, proxy: dict = None):
     resp = requests.get(
         apiURL + "/sec/rotate_xsrf?appid=" + appID + "&version=1.281.185",
         headers=headers,
-        proxies=None if proxy == {} else proxy,
+        proxies=proxy,
         timeout=timeout
     )
 
@@ -135,14 +162,29 @@ def getXSRFToken(timeout: int, proxy: dict = None):
 
     return token
 
+def _getClientReturnData(resp: requests.Response) -> dict:
+    """
+    A function to get the JSON data from the response object from the client API.
+    This function may also raise an exception if an error is encountered.
+    :param resp: the response object to get the data from
+    """
+    if resp.request.url.endswith("/ndt7"):
+        return resp.text
+    
+    if resp.text == "Invalid arguments":
+        raise InvalidArgumentsException("Invalid arguments")
+
+    try:
+        return resp.json()
+    except JSONDecodeError:
+        raise JSONDecodeErrorException("Failed to decode JSON data: " + resp.text)
+
 
 def _getReturnData(resp: requests.Response) -> dict:
     """
     A function to get the JSON data from the response object.
     This function may also raise an exception if an error is encountered.
     :param resp: the response object to get the data from
-    :param token: the EarnApp oauth-refresh-token used for the request.
-    This token may be used when a IncorrectTokenException is raised.
     """
     if resp.status_code == 429:  # if the user is ratelimited
         raise RatelimitedException("You are being ratelimited")  # raise an exception
@@ -152,9 +194,150 @@ def _getReturnData(resp: requests.Response) -> dict:
     try:
         jsonData = resp.json()  # attempt to get the JSON data
     except JSONDecodeError:
-        raise JSONDecodeErrorException("Failed to decode JSON data returned from server: " + resp.text)  # if the JSON data was invalid, raise an exception
+        raise JSONDecodeErrorException("Failed to decode JSON data: " + resp.text)  # if the JSON data was invalid, raise an exception
     return jsonData
 
+
+class Client:
+    """
+    A class that represents a EarnApp client session
+    This holds the client settings/proxy
+    """
+
+    proxy = {}
+    timeout = 10
+
+    def __init__(self, uuid: str, version: str, arch: str, appid: str, proxy: dict = None, timeout: int = 10):
+        """
+        Initialise the client
+        :param uuid: the uuid of the client
+        :param version: the version of the client
+        :param arch: the architecture of the client
+        :param appid: the appid of the client
+        :param proxy: the proxy to use
+        :param timeout: the amount of time to wait for a response from the server
+        """
+        self.uuid = uuid
+        self.version = version
+        self.arch = arch
+        self.appid = appid
+        if proxy is None:
+            proxy = {}
+        self.proxy = proxy
+        self.timeout = timeout
+
+    def setProxy(self, proxy: dict) -> bool:
+        """
+        Set the proxy for the requests
+        :param proxy: proxy dictionary
+        :return: True
+        """
+        self.proxy = proxy  # set the proxy
+        return True
+
+    def simpleClientRequest(
+        self,
+        endpoint: str,
+        method: str,
+    ) -> dict:
+        """
+        A function to call a given endpoint. It handles return data, no XSRF for client.
+        :param endpoint: the endpoint to call
+        :param method: the method to use (GET, POST, DELETE or PUT)
+        :param data (optional): JSON data to send
+        """
+
+        if method == "GET":
+            endpoint += "?uuid=" + self.uuid + "&version=" + self.version + "&arch=" + self.arch + "&appid=" + self.appid
+            data = None
+        else:
+            data = {"uuid": self.uuid, "version": self.version, "arch": self.arch, "appid": self.appid}
+
+        resp = _makeClientRequest(
+            endpoint,
+            method,
+            data=data,
+            proxy=self.proxy
+        )
+
+        return _getClientReturnData(resp)
+
+    def appConfigWin(self):
+        """
+        Get many details about the device, including:
+        Bandwidth
+        Earnings
+        Referral code of linked account
+        Available payment methods
+
+        :return: JSON data
+        """
+        return self.simpleClientRequest("app_config_win.json", "POST")
+
+    def appConfigNode(self):
+        """
+        Think this returns the latest Linux version, not 100% sure.
+
+        :return: JSON data
+        """
+        return self.simpleClientRequest("app_config_node.json", "GET")
+
+    def appConfig(self):
+        """
+        No idea what this is, it just seems to return an empty array in my tests.
+
+        :return: JSON data
+        """
+        return self.simpleClientRequest("app_config.json", "GET")
+
+    def isPiggybox(self):
+        """
+        Checks if the device is a piggybox.
+
+        :return: JSON data
+        """
+        return self.simpleClientRequest("is_piggybox", "GET")
+
+    def ndt7(self):
+        """
+        Not sure, think it's a speedtest or something for piggybox.
+
+        :return: String that is just 'OK' in my tests
+        """
+        return self.simpleClientRequest("ndt7", "POST")
+
+    def installDevice(self):
+        """
+        Register the device with the server. 
+        This is called by the app when the device is first installed.
+        
+        :return: JSON data showing success or fail
+        """
+        return self.simpleClientRequest("install_device", "POST")
+
+    def getBWStats(self):
+        """
+        Shows total bandwidth and total earnt.
+
+        :return: JSON data
+        """
+        return self.simpleClientRequest("get_bw_stats", "GET")
+
+    def isLinked(self):
+        """
+        Shows the email address of the account the device is linked to.
+
+        :return: JSON data
+        """
+        return self.simpleClientRequest("is_linked", "GET")
+
+    def isIPBlocked(self):
+        """
+        Checks if the IP used for the request is blocked.
+
+        :return: JSON data
+        """
+        return self.simpleClientRequest("is_ip_blocked", "GET")
 
 class User:
     """
@@ -223,6 +406,7 @@ class User:
         )
 
         return _getReturnData(resp)
+
 
     def login(self, token: str, method: str="google") -> bool:
         """

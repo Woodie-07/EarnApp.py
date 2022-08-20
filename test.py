@@ -15,6 +15,11 @@ You should have received a copy of the GNU General Public License along with Ear
 
 from earnapp import earnapp
 
+clientTestUUID = "DEVICE UUID"
+clientTestVersion = "EARNAPP VERSION"
+clientTestArch = "CPU ARCH"
+clientTestAppID = "EARNAPP APPID"
+
 token = "OAUTH-REFRESH-TOKEN"
 deviceID = "DEVICE ID TO ADD"
 hideDeviceID = "DEVICE ID TO HIDE"
@@ -25,9 +30,27 @@ renameTo = "NEW DEVICE NAME"
 proxy = {'https': 'socks5://user:pass@ip:port'}
 payoutEmail = "ENTER TEST PAYOUT EMAIL"
 
+print("Initializing client class")
+client = earnapp.Client(clientTestUUID, clientTestVersion, clientTestArch, clientTestAppID)
+print("Got client class")
+
+
+client.setProxy(proxy)
+
+print(client.appConfigWin())
+print(client.appConfigNode())
+print(client.appConfig())
+print(client.isPiggybox())
+print(client.ndt7())
+print(client.installDevice())
+print(client.getBWStats())
+print(client.isLinked())
+print(client.isIPBlocked())
+
 print("Initializing user class")
 user = earnapp.User()
 print("Got user class")
+
 
 user.setProxy(proxy)
 
