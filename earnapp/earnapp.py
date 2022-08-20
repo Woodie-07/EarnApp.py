@@ -182,11 +182,11 @@ class User:
 
     def _updateXSRFTokenIfNecessary(self):
         currentTime = int(time.time())
-        if currentTime - 60 < self.xsrfTokenTime: # 60 second token expiration
+        if currentTime - 60 < self.xsrfTokenTime:  # 60 second token expiration
             return self.xsrfToken
 
         xsrfToken = getXSRFToken(self.timeout, proxy=self.proxy)
-        self.xsrfTokenTime = currentTime # set the update time
+        self.xsrfTokenTime = currentTime  # set the update time
         self.xsrfToken = xsrfToken
         self.cookies["xsrf-token"] = xsrfToken
         self.headers["xsrf-token"] = xsrfToken
