@@ -170,7 +170,7 @@ def _getClientReturnData(resp: requests.Response) -> dict:
     """
     if resp.request.url.endswith("/ndt7"):
         return resp.text
-    
+
     if resp.text == "Invalid arguments":
         raise InvalidArgumentsException("Invalid arguments")
 
@@ -308,9 +308,9 @@ class Client:
 
     def installDevice(self):
         """
-        Register the device with the server. 
+        Register the device with the server.
         This is called by the app when the device is first installed.
-        
+
         :return: JSON data showing success or fail
         """
         return self.simpleClientRequest("install_device", "POST")
