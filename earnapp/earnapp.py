@@ -136,7 +136,6 @@ def getXSRFToken(timeout: int, proxy: dict = None):
     return token
 
 
-
 def _getReturnData(resp: requests.Response):
     """
     A function to get the JSON data from the response object.
