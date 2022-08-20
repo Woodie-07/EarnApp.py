@@ -228,7 +228,6 @@ class User:
         Get data about the logged in user
         :return: a dictionary containing the user data
         """
-
         return self.simpleEarnAppRequest("user_data", "GET")
 
     def money(self) -> dict:
@@ -236,7 +235,6 @@ class User:
         Get info such as current balance, payment method, etc.
         :return: a dictionary containing the user's money data
         """
-
         return self.simpleEarnAppRequest("money", "GET")
 
     def devices(self) -> dict:
@@ -244,7 +242,6 @@ class User:
         Get info such as device IDs, rate, amount earnt, etc.
         :return: a dictionary containing the user's device data
         """
-
         return self.simpleEarnAppRequest("devices", "GET")
 
     def appVersions(self) -> dict:
@@ -252,7 +249,6 @@ class User:
         Get the latest app version
         :return: a dictionary containing the latest version
         """
-
         return self.simpleEarnAppRequest("downloads", "GET")
 
     def paymentMethods(self) -> dict:
@@ -260,7 +256,6 @@ class User:
         Get all available payment methods
         :return: a dictionary containing all available payment methods
         """
-
         return self.simpleEarnAppRequest("payment_methods", "GET")
 
     def transactions(self) -> dict:
@@ -268,7 +263,6 @@ class User:
         Get past transactions and their status
         :return: a dictionary containing past transactions
         """
-
         return self.simpleEarnAppRequest("transactions", "GET")
 
     def linkDevice(self, deviceID: str) -> dict:
@@ -277,7 +271,6 @@ class User:
         :param deviceID: EarnApp device ID to link to account
         :return: a dictionary containing error message/success
         """
-
         return self.simpleEarnAppRequest("link_device", "POST", data={"uuid": deviceID})
 
     def hideDevice(self, deviceID: str) -> dict:
@@ -286,7 +279,6 @@ class User:
         :param deviceID: EarnApp device ID to hide from account
         :return: a dictionary containing error message/success
         """
-
         return self.simpleEarnAppRequest("hide_device", "PUT", data={"uuid": deviceID})
 
     def showDevice(self, deviceID: str) -> dict:
@@ -295,7 +287,6 @@ class User:
         :param deviceID: EarnApp device ID to show on account
         :return: a dictionary containing error message/success
         """
-
         return self.simpleEarnAppRequest("show_device", "PUT", data={"uuid": deviceID})
 
     def deleteDevice(self, deviceID: str) -> dict:
@@ -304,7 +295,6 @@ class User:
         :param deviceID: EarnApp device ID to delete from account
         :return: a dictionary containing error message/success
         """
-
         return self.simpleEarnAppRequest("device/" + deviceID, "DELETE")
 
     def renameDevice(self, deviceID: str, name: str) -> dict:
@@ -314,7 +304,6 @@ class User:
         :param name: new name for the device
         :return: a dictionary containing error message/success
         """
-
         return self.simpleEarnAppRequest("edit_device/" + deviceID, "PUT", data={"name": name})
 
     def redeemDetails(self, toEmail: str, paymentMethod: str="paypal.com") -> dict:
@@ -324,7 +313,6 @@ class User:
         :param paymentMethod: optional payment method to send via
         :return: a dictionary containing error message/success
         """
-
         return self.simpleEarnAppRequest("redeem_details", "POST", data={"to_email": toEmail, "payment_method": paymentMethod})
 
     def onlineStatus(self, deviceIDs: list) -> dict:
@@ -333,7 +321,6 @@ class User:
         :param deviceIDs: list of device ID dicts to check (uuid and appid in each dict)
         :return: a dictionary containing the online status of the devices
         """
-
         return self.simpleEarnAppRequest("device_statuses", "POST", data={"list": deviceIDs})
 
     def usage(self, step: str = "daily") -> dict:
@@ -342,7 +329,6 @@ class User:
         :param step: the timeframe to get usage for (daily, weekly, monthly), default daily
         :return: a dictionary containing the usage
         """
-
         if step not in ["daily", "weekly", "monthly"]:
             raise InvalidTimeframeException
 
