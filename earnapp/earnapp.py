@@ -118,7 +118,7 @@ def getXSRFToken(timeout: int, proxy: dict = None):
         raise XSRFErrorException("Could not get XSRF token")
 
     return token
-    
+
 
 
 def _getReturnData(resp: requests.Response):
