@@ -38,7 +38,7 @@ class XSRFErrorException(Exception):
 
 class InvalidTimeframeException(Exception):
     """
-    Raised when the given timeframe is invalid 
+    Raised when the given timeframe is invalid.
     Must be 'daily', 'weekly', or 'monthly'.
     """
 
@@ -354,8 +354,8 @@ class User:
         :return: a dictionary containing error message/success
         """
         return self.simpleEarnAppRequest(
-            "redeem_details", 
-            "POST", 
+            "redeem_details",
+            "POST",
             data={
                 "to_email": toEmail,
                 "payment_method": paymentMethod
