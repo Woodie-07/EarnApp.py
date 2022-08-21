@@ -171,6 +171,9 @@ def _getClientReturnData(resp: requests.Response) -> dict:
     if resp.request.url.endswith("/ndt7"):
         return resp.text
 
+    if resp.text == "Too Many Requests":
+        raise RatelimitedException(resp.text)
+    
     if resp.text == "Invalid arguments":
         raise InvalidArgumentsException("Invalid arguments")
 
