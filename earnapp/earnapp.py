@@ -1,6 +1,6 @@
 """
 EarnApp.py - A Python library to interact with the EarnApp API
-Copyright (C) 2022  SWM Tech Industries
+Copyright (C) 2022  Woodie
 
 This file is part of EarnApp.py.
 
