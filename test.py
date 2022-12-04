@@ -20,7 +20,7 @@ clientTestVersion = "EARNAPP VERSION"
 clientTestArch = "CPU ARCH"
 clientTestAppID = "EARNAPP APPID"
 
-token = "OAUTH-REFRESH-TOKEN"
+token = "OAUTH-TOKEN"
 deviceID = "DEVICE ID TO ADD"
 hideDeviceID = "DEVICE ID TO HIDE"
 showDeviceID = "DEVICE ID TO SHOW"

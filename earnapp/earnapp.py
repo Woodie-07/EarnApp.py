@@ -28,7 +28,7 @@ class RatelimitedException(Exception):
 
 
 class IncorrectTokenException(Exception):
-    """Raised when the oauth-refresh-token is incorrect."""
+    """Raised when the oauth-token is incorrect."""
 
 
 class JSONDecodeErrorException(Exception):
@@ -415,7 +415,7 @@ class User:
         """
         Attempt to log in to the account by requesting /user_data
         If it succeeds, it will write that data to the cookies variable
-        :param token: oauth-refresh-token from the EarnApp dashboard
+        :param token: oauth-token from the EarnApp dashboard
         :param method (optional): login method, only current option is google.
         :return: True on successful login, False otherwise
         """
@@ -425,7 +425,7 @@ class User:
             "GET",
             {
                 "auth-method": method,
-                "oauth-refresh-token": token,
+                "oauth-token": token,
                 "xsrf-token": self.xsrfToken
             },
             self.timeout,
@@ -436,7 +436,7 @@ class User:
         if resp.status_code == 200:  # if the cookies were valid
             self.cookies = {  # save the cookies to the variable
                 "auth-method": method,
-                "oauth-refresh-token": token,
+                "oauth-token": token,
                 "xsrf-token": self.xsrfToken
             }
             # return the right value depending on succeeding/failing
@@ -569,8 +569,7 @@ class User:
         """
         return self.simpleEarnAppRequest(
             "device_statuses",
-            "POST",
-            data={"list": deviceIDs}
+            "GET"
         )
 
     def usage(self, step: str = "daily") -> dict:
