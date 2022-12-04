@@ -561,16 +561,19 @@ class User:
             }
         )
 
-    def onlineStatus(self, deviceIDs: list) -> dict:
+    def onlineStatus(self) -> dict:
         """
-        Get the online status of a list of devices
-        :param deviceIDs: list of device ID dicts to check (uuid and appid in each dict)
-        :return: a dictionary containing the online status of the devices
+        Get the online status of device
+        :return: a dictionary containing any online devices
         """
-        return self.simpleEarnAppRequest(
-            "device_statuses",
-            "GET"
-        )
+        return self.simpleEarnAppRequest("device_statuses", "GET")
+
+    def counters(self) -> dict:
+        """
+        Get some info about next refresh/withdraw
+        :return: a dictionary containing some sort of info about next refresh/withdraw
+        """
+        return self.simpleEarnAppRequest("counters", "GET")
 
     def usage(self, step: str = "daily") -> dict:
         """
