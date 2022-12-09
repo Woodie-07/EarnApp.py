@@ -11,11 +11,11 @@ A Python library to interact with the EarnApp API.
 ## Documentation
 1) First, import the library: `from earnapp import earnapp`
 2) Next, you can initialize a user. You can have as many users as you like and each user can have a different token. Initialize it with something: `user = earnapp.User()`. You can also initialize a Client which allows you to interact with the client API, like so: `client = earnapp.Client(uuid, version, arch, appid)`. These options can be changed later with their variable names, for example: `client.uuid = newUUID`.
-3) Log into the EarnApp account with `user.login("ENTER oauth-token HERE")`. A client object does not require any authentication.
+3) Log into the EarnApp account with `user.login("ENTER oauth-refresh-token HERE")`. A client object does not require any authentication.
 4) The login function will return a IncorrectTokenException if the token is incorrect.
 ```py
 try:
-    user.login("ENTER oauth-token HERE")
+    user.login("ENTER oauth-refresh-token HERE")
 except earnapp.IncorrectTokenException:
     print("Incorrect token")
     raise SystemExit
@@ -24,7 +24,7 @@ except earnapp.IncorrectTokenException:
 
 User Functions:
 - setProxy - Sets the proxy for the requests. Argument is a dictionary with the proxy in requests format, for example: `{"https": "socks5://admin:P455w0rd@1.1.1.1:5442"}`.
-- login - Logs in to the EarnApp account. Argument is the oauth-token string.
+- login - Logs in to the EarnApp account. Argument is the oauth-refresh-token string.
 - userData - Get data about the logged in user.
 - money - Get data about the logged in user's money.
 - devices - Get data about the logged in user's devices.
@@ -79,7 +79,7 @@ from earnapp import earnapp
 
 user = earnapp.User()
 try:
-    user.login("ENTER oauth-token HERE")
+    user.login("ENTER oauth-refresh-token HERE")
 except earnapp.IncorrectTokenException:
     print("Incorrect token")
     raise SystemExit
