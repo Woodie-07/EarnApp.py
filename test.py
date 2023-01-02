@@ -70,10 +70,7 @@ print("Devices: " + str(devices))
 print("App version: " + str(user.appVersions()))
 print("Payment methods: " + str(user.paymentMethods()))
 print("Transactions: " + str(user.transactions()))
-print("Online statuses: " + str(user.onlineStatus([
-        devices[0]["uuid"],
-        devices[1]["uuid"]
-    ])))
+print("Online statuses: " + str(user.onlineStatus()))
 print("Usage: " + str(user.usage("monthly")))
 print("Attempting to link device ID " + deviceID)
 print(str(user.linkDevice(deviceID)))

@@ -20,7 +20,7 @@ from json.decoder import JSONDecodeError
 
 apiURL = "https://earnapp.com/dashboard/api/"
 clientAPIURL = "https://client.earnapp.com/"
-appID = "earnapp_dashboard"
+appID = "earnapp"
 
 
 class RatelimitedException(Exception):
