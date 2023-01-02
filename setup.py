@@ -23,7 +23,7 @@ README = (HERE / "README.md").read_text()
 setup(
     name='earnapp',
     packages=find_packages(),
-    version='0.1.8',
+    version='0.1.9',
     description='A python library to interact with the EarnApp API',
     long_description=README,
     long_description_content_type="text/markdown",
